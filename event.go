@@ -87,3 +87,20 @@ func (e Event) String() string {
 	}
 	return "key(" + strconv.Itoa(int(e.Type)) + ")"
 }
+
+// ParseKeyName returns the Event for a named key, the inverse of Event.String for
+// named keys - e.g. "up", "enter", "ctrl-c", "shift-tab", or "space" for the space
+// rune. It returns ok=false for an unknown name. Printable characters are not
+// handled here; pass those as runes via RuneEvent. Sharing keyNames with
+// Event.String keeps the display and parse vocabularies from drifting.
+func ParseKeyName(name string) (ev Event, ok bool) {
+	if name == "space" {
+		return RuneEvent(' '), true
+	}
+	for kt, n := range keyNames {
+		if n == name && kt != KeyNone {
+			return KeyEvent(kt), true
+		}
+	}
+	return Event{}, false
+}

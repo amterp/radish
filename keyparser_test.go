@@ -135,6 +135,33 @@ func TestParseSplitUTF8Resumes(t *testing.T) {
 	}
 }
 
+func TestParseKeyName(t *testing.T) {
+	// Round-trips with Event.String for every named key.
+	for kt, name := range keyNames {
+		if kt == KeyNone {
+			continue
+		}
+		ev, ok := ParseKeyName(name)
+		if !ok {
+			t.Errorf("ParseKeyName(%q) = not found", name)
+			continue
+		}
+		if ev.Type != kt {
+			t.Errorf("ParseKeyName(%q).Type = %v, want %v", name, ev.Type, kt)
+		}
+		if ev.String() != name {
+			t.Errorf("round-trip: ParseKeyName(%q).String() = %q", name, ev.String())
+		}
+	}
+
+	if ev, ok := ParseKeyName("space"); !ok || ev != RuneEvent(' ') {
+		t.Errorf("ParseKeyName(\"space\") = %v, %v; want space rune", ev, ok)
+	}
+	if _, ok := ParseKeyName("nope"); ok {
+		t.Errorf("ParseKeyName(\"nope\") should be unknown")
+	}
+}
+
 func TestEventString(t *testing.T) {
 	cases := []struct {
 		ev   Event
