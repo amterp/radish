@@ -9,8 +9,8 @@ import "strconv"
 type KeyType int
 
 const (
-	KeyNone      KeyType = iota // no event / dropped input
-	KeyRune                     // a printable rune; Event.Rune holds the character
+	KeyNone KeyType = iota // no event / dropped input
+	KeyRune                // a printable rune; Event.Rune holds the character
 	KeyUp
 	KeyDown
 	KeyLeft

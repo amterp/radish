@@ -22,7 +22,7 @@ func TestInlineRendererFirstRenderHidesCursor(t *testing.T) {
 func TestInlineRendererRedrawMovesUpAndClears(t *testing.T) {
 	var r inlineRenderer
 	_ = r.render("a\nb\nc") // 3 lines
-	got := r.render("x\ny")  // redraw
+	got := r.render("x\ny") // redraw
 	// Cursor already hidden; go to column 0, up 2 lines (3-1), erase below, rewrite.
 	want := "\r" + "\x1b[2A" + escEraseBelow + "x\r\ny"
 	if got != want {
