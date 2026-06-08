@@ -20,7 +20,7 @@ type Cmd int
 
 const (
 	CmdNone   Cmd = iota // keep going
-	CmdSubmit            // user confirmed; Run stops with Result{Submitted:true}
+	CmdSubmit            // user confirmed; Run stops with Result{} (Canceled:false)
 	CmdCancel            // user aborted; Run stops with Result{Canceled:true}
 )
 
@@ -42,10 +42,13 @@ type FrameSink interface {
 	Close() error
 }
 
-// Result reports how an interaction ended.
+// Result reports how an interaction ended. A run that returns a nil error ended
+// in exactly one of two ways: the user submitted (Canceled == false) or aborted
+// (Canceled == true, via Esc/Ctrl-C/Ctrl-D or EOF). The chosen value, if any,
+// lives on the component (e.g. SelectModel.Selected) or is returned by the typed
+// runners (RunSelect).
 type Result struct {
-	Submitted bool
-	Canceled  bool
+	Canceled bool
 }
 
 // Summarizer is an optional Model capability: the collapsed line shown after the
@@ -90,7 +93,7 @@ func Run(model Model, src EventSource, sink FrameSink) (Result, Model, error) {
 
 		switch cmd {
 		case CmdSubmit:
-			return collapse(model, sink, Result{Submitted: true})
+			return collapse(model, sink, Result{})
 		case CmdCancel:
 			return collapse(model, sink, Result{Canceled: true})
 		}

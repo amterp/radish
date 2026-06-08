@@ -28,17 +28,16 @@ go get github.com/amterp/radish
 
 ```go
 model := radish.NewSelect().
-    Prompt("Pick a fruit (type to filter)").
+    Title("Pick a fruit (type to filter)").
     Options("Apple", "Banana", "Cherry", "Date")
 
-res, final, err := radish.RunTerminal(model, os.Stdin, os.Stderr)
+choice, ok, err := radish.RunSelect(model, os.Stdin, os.Stderr)
 if errors.Is(err, radish.ErrNotInteractive) {
     // stdin isn't a TTY - fall back however you like
 }
-if res.Canceled {
-    return
+if !ok {
+    return // canceled
 }
-choice, _ := final.(*radish.SelectModel).Selected()
 fmt.Println(choice)
 ```
 
@@ -55,15 +54,16 @@ Drive the real prompt with scripted keystrokes and inspect every rendered frame.
 No terminal, no mocking:
 
 ```go
+model := radish.NewSelect().Title("Pick").Options("Apple", "Banana", "Cherry")
+
 driver := radish.NewScriptDriver([]radish.Event{
     radish.KeyEvent(radish.KeyDown),
     radish.KeyEvent(radish.KeyEnter),
 })
-_, final, _ := driver.Run(radish.NewSelect().
-    Prompt("Pick").Options("Apple", "Banana", "Cherry"))
+driver.Run(model)
 
-got, _ := final.(*radish.SelectModel).Selected() // "Banana"
-frames := driver.Frames()                        // every frame, in order
+got, _ := model.Selected() // "Banana"
+frames := driver.Frames()  // every frame, in order
 ```
 
 `Frames()` returns the initial render, the frame after each keystroke, and the
@@ -76,7 +76,7 @@ Everything below is optional; the defaults are sensible.
 
 ```go
 radish.NewSelect().
-    Prompt("Pick").
+    Title("Pick").
     Options(opts...).
     Matcher(myMatcher).   // how typing filters; default is case-insensitive fuzzy
     Theme(myTheme).       // amterp/color styles; default is tasteful

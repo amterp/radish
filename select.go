@@ -15,10 +15,10 @@ const defaultHeight = 10
 // rendering, no I/O - so it is driven identically by the production terminal and
 // by scripted test events.
 //
-// Build one with the chained setters (NewSelect().Prompt(...).Options(...)), then
+// Build one with the chained setters (NewSelect().Title(...).Options(...)), then
 // hand it to Run. After Run, read the choice with Selected.
 type SelectModel struct {
-	prompt  string
+	title   string
 	options []string
 	matcher Matcher
 	theme   *Theme
@@ -46,8 +46,8 @@ func NewSelect() *SelectModel {
 	}
 }
 
-// Prompt sets the title line shown above the options.
-func (m *SelectModel) Prompt(s string) *SelectModel { m.prompt = s; return m }
+// Title sets the line shown above the options (the question being asked).
+func (m *SelectModel) Title(s string) *SelectModel { m.title = s; return m }
 
 // Options sets the selectable options (in display order).
 func (m *SelectModel) Options(opts ...string) *SelectModel {
@@ -95,16 +95,14 @@ func (m *SelectModel) Width(n int) *SelectModel {
 }
 
 // Selected returns the chosen option and true, or ("", false) if the prompt was
-// canceled or nothing matched.
+// canceled or nothing matched. Whether a run was canceled is reported by
+// Result.Canceled from Run; this reports the value.
 func (m *SelectModel) Selected() (string, bool) {
 	if m.canceled || m.cursor < 0 || m.cursor >= len(m.matched) {
 		return "", false
 	}
 	return m.options[m.matched[m.cursor]], true
 }
-
-// Canceled reports whether the prompt was aborted (Esc/Ctrl-C/Ctrl-D or EOF).
-func (m *SelectModel) Canceled() bool { return m.canceled }
 
 // Update advances the model in response to one event. It implements Model.
 func (m *SelectModel) Update(e Event) (Model, Cmd) {
@@ -122,12 +120,21 @@ func (m *SelectModel) Update(e Event) (Model, Cmd) {
 		m.moveCursor(-1)
 	case m.keymap.matches(e, m.keymap.Down):
 		m.moveCursor(1)
+	case m.keymap.matches(e, m.keymap.PageUp):
+		m.moveCursor(-m.height)
+	case m.keymap.matches(e, m.keymap.PageDown):
+		m.moveCursor(m.height)
 	case m.keymap.matches(e, m.keymap.Home):
 		m.cursor = 0
 		m.clampViewport()
 	case m.keymap.matches(e, m.keymap.End):
 		m.cursor = max(0, len(m.matched)-1)
 		m.clampViewport()
+	case m.keymap.matches(e, m.keymap.ClearFilter):
+		if m.filter != "" {
+			m.filter = ""
+			m.refilter()
+		}
 	case e.Type == KeyBackspace:
 		if m.filter != "" {
 			r := []rune(m.filter)
@@ -147,25 +154,25 @@ func (m *SelectModel) Update(e Event) (Model, Cmd) {
 func (m *SelectModel) View() string {
 	var lines []string
 
-	if m.prompt != "" {
-		lines = append(lines, styled(m.theme.Title, m.prompt))
+	if m.title != "" {
+		lines = append(lines, styled(m.theme.Title, m.fit(m.title, 0)))
 	}
 	if m.filter != "" {
-		lines = append(lines, styled(m.theme.Filter, "/"+m.filter))
+		lines = append(lines, styled(m.theme.Filter, m.fit("/"+m.filter, 0)))
 	}
 
 	if len(m.matched) == 0 {
-		lines = append(lines, styled(m.theme.ScrollHint, "  (no matches)"))
+		lines = append(lines, styled(m.theme.ScrollHint, m.fit("  (no matches - backspace to widen)", 0)))
 		return strings.Join(lines, "\n")
 	}
 
 	if m.offset > 0 {
-		lines = append(lines, styled(m.theme.ScrollHint, "  ↑ "+strconv.Itoa(m.offset)+" more"))
+		lines = append(lines, styled(m.theme.ScrollHint, m.fit("  ↑ "+strconv.Itoa(m.offset)+" more", 0)))
 	}
 
 	end := min(m.offset+m.height, len(m.matched))
 	for i := m.offset; i < end; i++ {
-		label := m.truncate(m.options[m.matched[i]])
+		label := m.fit(m.options[m.matched[i]], 2) // reserve 2 cols for the "> " / "  " prefix
 		if i == m.cursor {
 			lines = append(lines, styled(m.theme.Cursor, "> ")+styled(m.theme.Selected, label))
 		} else {
@@ -174,7 +181,7 @@ func (m *SelectModel) View() string {
 	}
 
 	if remaining := len(m.matched) - end; remaining > 0 {
-		lines = append(lines, styled(m.theme.ScrollHint, "  ↓ "+strconv.Itoa(remaining)+" more"))
+		lines = append(lines, styled(m.theme.ScrollHint, m.fit("  ↓ "+strconv.Itoa(remaining)+" more", 0)))
 	}
 
 	return strings.Join(lines, "\n")
@@ -190,7 +197,7 @@ func (m *SelectModel) Summary() string {
 	if !ok {
 		return ""
 	}
-	title := m.prompt
+	title := m.title
 	if title == "" {
 		title = "Selected"
 	}
@@ -237,10 +244,15 @@ func (m *SelectModel) refilter() {
 	m.offset = 0
 }
 
-func (m *SelectModel) truncate(s string) string {
+// fit truncates plain text s to the model's width (0 = unlimited), reserving
+// `reserve` columns for a fixed prefix so the styled line never exceeds the
+// terminal width. Truncating the plain text *before* styling keeps it correct
+// under color: ANSI codes are zero-width on screen but would otherwise confuse a
+// width-aware truncator. Bounding every line this way keeps each frame line to one
+// visual row, which the inline renderer relies on for correct redraws.
+func (m *SelectModel) fit(s string, reserve int) string {
 	if m.width <= 0 {
 		return s
 	}
-	avail := max(1, m.width-2) // leave room for the "> " / "  " prefix
-	return runewidth.Truncate(s, avail, "…")
+	return runewidth.Truncate(s, max(1, m.width-reserve), "…")
 }

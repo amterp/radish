@@ -22,8 +22,11 @@ const (
 	KeyEsc
 	KeyHome
 	KeyEnd
+	KeyPageUp
+	KeyPageDown
 	KeyCtrlC
 	KeyCtrlD
+	KeyCtrlU
 )
 
 // Modifier is a reserved bitfield for chord modifiers. The current parser never
@@ -68,8 +71,11 @@ var keyNames = map[KeyType]string{
 	KeyEsc:       "esc",
 	KeyHome:      "home",
 	KeyEnd:       "end",
+	KeyPageUp:    "page-up",
+	KeyPageDown:  "page-down",
 	KeyCtrlC:     "ctrl-c",
 	KeyCtrlD:     "ctrl-d",
+	KeyCtrlU:     "ctrl-u",
 }
 
 // String returns a short, human-readable label, e.g. "up", "enter", "ctrl-c", or

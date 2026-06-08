@@ -1,28 +1,37 @@
 package radish
 
-// KeyMap binds navigation actions to one or more KeyTypes. Override any field to
-// remap an action; a nil/empty binding means the action is unbound. Printable
-// runes and backspace always edit the filter and are intentionally not remappable,
-// which keeps "type to filter" unambiguous.
+// KeyMap binds actions to one or more KeyTypes. Override any field to remap an
+// action; a nil/empty binding means the action is unbound. Typing a printable rune
+// and Backspace are the intrinsic text-input pair and are always filter edits
+// (never remappable), which keeps "type to filter" unambiguous; higher-level
+// editing commands like ClearFilter are bindable actions so they stay open to
+// customization.
 type KeyMap struct {
-	Up     []KeyType
-	Down   []KeyType
-	Submit []KeyType
-	Cancel []KeyType
-	Home   []KeyType
-	End    []KeyType
+	Up          []KeyType
+	Down        []KeyType
+	PageUp      []KeyType
+	PageDown    []KeyType
+	Home        []KeyType
+	End         []KeyType
+	Submit      []KeyType
+	Cancel      []KeyType
+	ClearFilter []KeyType
 }
 
-// DefaultKeyMap is the conventional binding: arrows navigate, Enter submits,
-// Esc/Ctrl-C/Ctrl-D cancel, Home/End jump to the ends.
+// DefaultKeyMap is the conventional binding: arrows navigate, PageUp/PageDown jump
+// a page, Home/End jump to the ends, Enter submits, Esc/Ctrl-C/Ctrl-D cancel, and
+// Ctrl-U clears the filter.
 func DefaultKeyMap() KeyMap {
 	return KeyMap{
-		Up:     []KeyType{KeyUp},
-		Down:   []KeyType{KeyDown},
-		Submit: []KeyType{KeyEnter},
-		Cancel: []KeyType{KeyEsc, KeyCtrlC, KeyCtrlD},
-		Home:   []KeyType{KeyHome},
-		End:    []KeyType{KeyEnd},
+		Up:          []KeyType{KeyUp},
+		Down:        []KeyType{KeyDown},
+		PageUp:      []KeyType{KeyPageUp},
+		PageDown:    []KeyType{KeyPageDown},
+		Home:        []KeyType{KeyHome},
+		End:         []KeyType{KeyEnd},
+		Submit:      []KeyType{KeyEnter},
+		Cancel:      []KeyType{KeyEsc, KeyCtrlC, KeyCtrlD},
+		ClearFilter: []KeyType{KeyCtrlU},
 	}
 }
 

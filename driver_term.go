@@ -29,6 +29,23 @@ func RunTerminal(model Model, in *os.File, out io.Writer) (Result, Model, error)
 	return Run(model, d, d)
 }
 
+// RunSelect runs a single-select prompt on a real terminal and returns the chosen
+// value. ok is false when the user canceled (Esc/Ctrl-C). It returns
+// ErrNotInteractive when in is not a TTY. This is the convenient one-call form;
+// for full control over the I/O edge (e.g. tests) use Run with your own
+// EventSource/FrameSink, or a ScriptDriver.
+func RunSelect(m *SelectModel, in *os.File, out io.Writer) (value string, ok bool, err error) {
+	res, _, err := RunTerminal(m, in, out)
+	if err != nil {
+		return "", false, err
+	}
+	if res.Canceled {
+		return "", false, nil
+	}
+	v, _ := m.Selected()
+	return v, true, nil
+}
+
 // TermDriver reads raw keystrokes from a terminal and renders frames to it. It
 // implements both EventSource and FrameSink. The escape-sequence accounting lives
 // in inlineRenderer (pure, unit-tested); TermDriver only adds the raw-mode

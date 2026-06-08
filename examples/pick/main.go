@@ -24,20 +24,18 @@ func main() {
 	}
 
 	model := radish.NewSelect().
-		Prompt("Pick a fruit (type to filter)").
+		Title("Pick a fruit (type to filter)").
 		Options(fruits...).
 		Height(8)
 
-	res, final, err := radish.RunTerminal(model, os.Stdin, os.Stderr)
+	choice, ok, err := radish.RunSelect(model, os.Stdin, os.Stderr)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
-	if res.Canceled {
+	if !ok {
 		fmt.Fprintln(os.Stderr, "canceled")
 		os.Exit(130)
 	}
-
-	sel, _ := final.(*radish.SelectModel).Selected()
-	fmt.Println(sel)
+	fmt.Println(choice)
 }

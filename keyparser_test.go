@@ -22,6 +22,7 @@ func TestParse(t *testing.T) {
 		{"tab", []byte{0x09}, []Event{KeyEvent(KeyTab)}, 1},
 		{"ctrl-c", []byte{0x03}, []Event{KeyEvent(KeyCtrlC)}, 1},
 		{"ctrl-d", []byte{0x04}, []Event{KeyEvent(KeyCtrlD)}, 1},
+		{"ctrl-u", []byte{0x15}, []Event{KeyEvent(KeyCtrlU)}, 1},
 		{"unknown control dropped", []byte{0x01}, nil, 1},
 		{"ctrl-z dropped", []byte{0x1a}, nil, 1},
 
@@ -47,6 +48,8 @@ func TestParse(t *testing.T) {
 		{"home tilde 7", []byte("\x1b[7~"), []Event{KeyEvent(KeyHome)}, 4},
 		{"end tilde 4", []byte("\x1b[4~"), []Event{KeyEvent(KeyEnd)}, 4},
 		{"end tilde 8", []byte("\x1b[8~"), []Event{KeyEvent(KeyEnd)}, 4},
+		{"page up tilde 5", []byte("\x1b[5~"), []Event{KeyEvent(KeyPageUp)}, 4},
+		{"page down tilde 6", []byte("\x1b[6~"), []Event{KeyEvent(KeyPageDown)}, 4},
 		{"delete tilde 3 dropped", []byte("\x1b[3~"), nil, 4},
 
 		// Modified arrow (Ctrl+Up): modifier ignored, still navigates

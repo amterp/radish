@@ -45,6 +45,8 @@ func parseOne(b []byte) (ev Event, n int, ok bool) {
 		return KeyEvent(KeyCtrlC), 1, true
 	case c == 0x04: // Ctrl-D
 		return KeyEvent(KeyCtrlD), 1, true
+	case c == 0x15: // Ctrl-U
+		return KeyEvent(KeyCtrlU), 1, true
 	case c < 0x20: // other C0 control bytes: drop
 		return KeyEvent(KeyNone), 1, true
 	default: // printable: decode one UTF-8 rune (space included)
@@ -118,7 +120,11 @@ func parseCSI(b []byte) (Event, int, bool) {
 			return KeyEvent(KeyHome), consumed, true
 		case "4", "8":
 			return KeyEvent(KeyEnd), consumed, true
-		default: // "3"=Delete, "5"=PgUp, "6"=PgDn, ... - recognized shape, unmapped
+		case "5":
+			return KeyEvent(KeyPageUp), consumed, true
+		case "6":
+			return KeyEvent(KeyPageDown), consumed, true
+		default: // "3"=Delete, ... - recognized shape, unmapped
 			return KeyEvent(KeyNone), consumed, true
 		}
 	default:
