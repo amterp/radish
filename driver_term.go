@@ -46,6 +46,37 @@ func RunSelect(m *SelectModel, in *os.File, out io.Writer) (value string, ok boo
 	return v, true, nil
 }
 
+// RunInput runs a single-line text prompt on a real terminal and returns the typed
+// value. ok is false when the user canceled (Esc/Ctrl-C). It returns
+// ErrNotInteractive when in is not a TTY. The convenient one-call form; for full
+// control over the I/O edge (e.g. tests) use Run with a ScriptDriver.
+func RunInput(m *InputModel, in *os.File, out io.Writer) (value string, ok bool, err error) {
+	res, _, err := RunTerminal(m, in, out)
+	if err != nil {
+		return "", false, err
+	}
+	if res.Canceled {
+		return "", false, nil
+	}
+	v, _ := m.Value()
+	return v, true, nil
+}
+
+// RunMultiSelect runs a multi-select prompt on a real terminal and returns the
+// chosen values. ok is false when the user canceled (Esc/Ctrl-C). It returns
+// ErrNotInteractive when in is not a TTY. The convenient one-call form; for full
+// control over the I/O edge (e.g. tests) use Run with a ScriptDriver.
+func RunMultiSelect(m *MultiSelectModel, in *os.File, out io.Writer) (values []string, ok bool, err error) {
+	res, _, err := RunTerminal(m, in, out)
+	if err != nil {
+		return nil, false, err
+	}
+	if res.Canceled {
+		return nil, false, nil
+	}
+	return m.Selected(), true, nil
+}
+
 // TermDriver reads raw keystrokes from a terminal and renders frames to it. It
 // implements both EventSource and FrameSink. The escape-sequence accounting lives
 // in inlineRenderer (pure, unit-tested); TermDriver only adds the raw-mode

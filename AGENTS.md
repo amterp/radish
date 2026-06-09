@@ -28,20 +28,35 @@ exactly what we left huh to escape. A feature that requires it doesn't belong he
 
 ## Extending the prompt family
 
-Today: single-select (`Select`). Planned, all on the same seam: `Confirm`, `Input`,
-`MultiSelect`. To keep them coherent, a new component MUST:
+Today: single-select (`Select`), multi-select (`MultiSelect`), single-line text (`Input`).
+`Select` and `MultiSelect` share the filter/viewport/navigation core in the unexported `list`
+struct (`list.go`), which both embed - extend or fix list behavior there, not in two places.
+To keep new components coherent, a new component MUST:
 
 - be a pure `Model` driven by `Run`, reusing the shared contract: `Result{Canceled}` for the
   outcome, a typed `RunX(...) (value, ok, err)` convenience that spares callers a Model type
-  assertion, and `Title(...)` for the prompt line;
+  assertion, and `Title(...)` for the heading line;
 - route navigation and commands through bindable `KeyMap` actions, treating only printable
-  runes and Backspace as the intrinsic, non-remappable text-input pair;
+  runes and Backspace as the intrinsic, non-remappable text-input pair (the one sanctioned
+  exception is MultiSelect's Space-to-toggle, a deliberate convention noted in `keymap.go`);
 - truncate every rendered line to the configured width *before* styling (color-safe), so each
   frame line is exactly one visual row - the inline renderer's redraw accounting depends on it;
-- render only via the injected sink - a Model never writes to a terminal directly.
+- render only via the injected sink - a Model never writes to a terminal directly;
+- never reveal a secret in any frame: a masked/no-echo input renders placeholder glyphs (or
+  nothing) and its `Summary()` must not echo the value.
 
-`MultiSelect` reuses `Select`'s state with a Tab/Space toggle. When in doubt, match `Select`'s
-shape rather than inventing a parallel one - cross-component consistency is the point.
+Conventions worth matching: `Title(...)` is always the optional heading line; `Input` adds an
+inline `Prompt(...)` prefix rendered on the field line itself (mirroring how a shell prompt
+sits before the cursor), and its `Summary()` uses that prompt (not the title) as the collapsed
+label. `MultiSelect` reuses `Select`'s state with a Tab/Space toggle and `Min`/`Max` bounds
+(`Max` blocks extra toggles, `Min` gates submit). Injectable openness is per-capability, not
+universal: `Matcher` only exists on the filterable list prompts (`Select`/`MultiSelect`), not
+on `Input`. When in doubt, match an existing component's shape rather than inventing a parallel
+one - cross-component consistency is the point.
+
+There is intentionally **no `Confirm` widget**: a yes/no prompt is an `Input` whose result the
+caller interprets (e.g. empty or a `y`-prefix means yes). Keeping that policy with the caller
+keeps radish minimal and avoids a near-duplicate of `Input`.
 
 ## Conventions & workflow
 

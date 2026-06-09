@@ -1,8 +1,8 @@
 // Package radish is a small, open, testable terminal-interactivity library.
 //
-// radish provides interactive terminal prompts (starting with single-select)
-// built around a strict separation between a pure, deterministic Model and a
-// thin I/O edge:
+// radish provides interactive terminal prompts - single-select (Select),
+// multi-select (MultiSelect), and single-line text (Input) - built around a strict
+// separation between a pure, deterministic Model and a thin I/O edge:
 //
 //   - A Model holds all state, logic, and rendering. It is pure: no I/O, no
 //     globals, no time. Update(Event) advances state; View() renders a frame.

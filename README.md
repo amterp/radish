@@ -91,18 +91,42 @@ radish.NewSelect().
   [`amterp/color`](https://github.com/amterp/color)); nil fields render plain.
 - **KeyMap** - `[]KeyType` slices per action; trivially remappable.
 
-## Status & roadmap
+## The prompt family
 
-Early development. Implemented: single-select (`Select`). The `Model`/`Run` seam is
-designed to host the rest of the family with the same testability story:
+All three share the `Model`/`Run` seam and the same testability story:
 
-- **Confirm** - yes/no.
-- **Input** - single-line text, with placeholder and secret modes.
-- **MultiSelect** - reuses the Select state with a Tab/Space toggle.
+- **`Select`** - single-select with live type-to-filter. `RunSelect`.
+- **`MultiSelect`** - multi-select; Tab/Space toggles, with optional `Min`/`Max`
+  bounds (`Max` blocks extra toggles, `Min` gates submit). Reuses Select's
+  filter/viewport core. `RunMultiSelect`.
+- **`Input`** - single-line text with an inline `Prompt`, optional `Title` heading
+  and `Placeholder`, and an `Echo` mode: `EchoNormal`, `EchoMasked` (`•`), or
+  `EchoNone` (sudo-style no-echo for secrets - nothing is rendered as you type, so
+  the value never appears in any frame). `RunInput`.
 
-**Known limitation:** the prompt reads terminal width once at construction; a
-mid-prompt resize (SIGWINCH) may misalign one redraw. The seam can carry a resize
-event later without changing the `Model` contract.
+There is intentionally no `Confirm` widget: a yes/no prompt is just an `Input` whose
+result the caller interprets, so radish stays minimal and the policy lives with the
+caller.
+
+```go
+// MultiSelect
+picks, ok, err := radish.RunMultiSelect(
+    radish.NewMultiSelect().Title("Pick toppings").Options(opts...).Max(3),
+    os.Stdin, os.Stderr)
+
+// Input (secret)
+pw, ok, err := radish.RunInput(
+    radish.NewInput().Prompt("Password > ").Echo(radish.EchoNone),
+    os.Stdin, os.Stderr)
+```
+
+Try them: `go run ./examples/multiselect`, `go run ./examples/input`.
+
+**Known limitations:** the prompt reads terminal width once at construction, so a
+mid-prompt resize (SIGWINCH) may misalign one redraw; the seam can carry a resize
+event later without changing the `Model` contract. `Input` truncates an
+over-width line at the edges rather than horizontally scrolling - the full value is
+always returned regardless of display.
 
 ## License
 

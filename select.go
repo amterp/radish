@@ -1,14 +1,9 @@
 package radish
 
 import (
-	"sort"
 	"strconv"
 	"strings"
-
-	runewidth "github.com/mattn/go-runewidth"
 )
-
-const defaultHeight = 10
 
 // SelectModel is a single-select prompt: a title, a list of options, live
 // type-to-filter, and a moving cursor. It is a pure Model - all state, logic, and
@@ -16,22 +11,15 @@ const defaultHeight = 10
 // by scripted test events.
 //
 // Build one with the chained setters (NewSelect().Title(...).Options(...)), then
-// hand it to Run. After Run, read the choice with Selected.
+// hand it to Run. After Run, read the choice with Selected. The option set, filter,
+// cursor, and viewport live in the embedded list, shared with MultiSelect.
 type SelectModel struct {
-	title   string
-	options []string
-	matcher Matcher
-	theme   *Theme
-	keymap  KeyMap
-	height  int
-	width   int // 0 = no truncation
+	title  string
+	theme  *Theme
+	keymap KeyMap
 
-	filter  string
-	matched []int // indices into options that pass the matcher, in display order
-	cursor  int   // index into matched
-	offset  int   // viewport top: index into matched
+	list
 
-	done     bool
 	canceled bool
 }
 
@@ -39,10 +27,9 @@ type SelectModel struct {
 // theme and keymap, 10 visible rows). Customize via the chained setters.
 func NewSelect() *SelectModel {
 	return &SelectModel{
-		matcher: DefaultMatcher,
-		theme:   DefaultTheme(),
-		keymap:  DefaultKeyMap(),
-		height:  defaultHeight,
+		theme:  DefaultTheme(),
+		keymap: DefaultKeyMap(),
+		list:   list{matcher: DefaultMatcher, height: defaultHeight},
 	}
 }
 
@@ -114,7 +101,6 @@ func (m *SelectModel) Update(e Event) (Model, Cmd) {
 		if len(m.matched) == 0 {
 			return m, CmdNone // nothing to submit
 		}
-		m.done = true
 		return m, CmdSubmit
 	case m.keymap.matches(e, m.keymap.Up):
 		m.moveCursor(-1)
@@ -170,8 +156,8 @@ func (m *SelectModel) View() string {
 		lines = append(lines, styled(m.theme.ScrollHint, m.fit("  ↑ "+strconv.Itoa(m.offset)+" more", 0)))
 	}
 
-	end := min(m.offset+m.height, len(m.matched))
-	for i := m.offset; i < end; i++ {
+	start, end := m.visibleRange()
+	for i := start; i < end; i++ {
 		label := m.fit(m.options[m.matched[i]], 2) // reserve 2 cols for the "> " / "  " prefix
 		if i == m.cursor {
 			lines = append(lines, styled(m.theme.Cursor, "> ")+styled(m.theme.Selected, label))
@@ -202,57 +188,4 @@ func (m *SelectModel) Summary() string {
 		title = "Selected"
 	}
 	return styled(m.theme.Title, title) + " " + styled(m.theme.Selected, sel)
-}
-
-func (m *SelectModel) moveCursor(delta int) {
-	if len(m.matched) == 0 {
-		return
-	}
-	m.cursor = min(max(m.cursor+delta, 0), len(m.matched)-1)
-	m.clampViewport()
-}
-
-func (m *SelectModel) clampViewport() {
-	if m.cursor < m.offset {
-		m.offset = m.cursor
-	}
-	if m.cursor >= m.offset+m.height {
-		m.offset = m.cursor - m.height + 1
-	}
-	if m.offset < 0 {
-		m.offset = 0
-	}
-}
-
-// refilter recomputes the matched set against the current filter, stably ordered
-// by (rank, original index), and resets the cursor/viewport to the top.
-func (m *SelectModel) refilter() {
-	type scored struct{ idx, rank int }
-	var s []scored
-	for i, opt := range m.options {
-		if ok, rank := m.matcher(m.filter, opt); ok {
-			s = append(s, scored{i, rank})
-		}
-	}
-	sort.SliceStable(s, func(a, b int) bool { return s[a].rank < s[b].rank })
-
-	m.matched = m.matched[:0]
-	for _, sc := range s {
-		m.matched = append(m.matched, sc.idx)
-	}
-	m.cursor = 0
-	m.offset = 0
-}
-
-// fit truncates plain text s to the model's width (0 = unlimited), reserving
-// `reserve` columns for a fixed prefix so the styled line never exceeds the
-// terminal width. Truncating the plain text *before* styling keeps it correct
-// under color: ANSI codes are zero-width on screen but would otherwise confuse a
-// width-aware truncator. Bounding every line this way keeps each frame line to one
-// visual row, which the inline renderer relies on for correct redraws.
-func (m *SelectModel) fit(s string, reserve int) string {
-	if m.width <= 0 {
-		return s
-	}
-	return runewidth.Truncate(s, max(1, m.width-reserve), "…")
 }
