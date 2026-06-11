@@ -172,6 +172,29 @@ func TestMultiSelectPreselect(t *testing.T) {
 	}
 }
 
+func TestMultiSelectPreselectBeforeOptions(t *testing.T) {
+	// Preselect is order-independent with Options: labels are remembered and
+	// applied when the options arrive.
+	m := NewMultiSelect().Title("Pick").Preselect("b").Options("a", "b", "c")
+	d, _, mm := driveMulti(t, m, KeyEvent(KeyEnter))
+
+	if got := mm.Selected(); !eqStrs(got, []string{"b"}) {
+		t.Fatalf("Selected() = %v, want [b]", got)
+	}
+	if init := d.Frames()[0]; !strings.Contains(init, "[x] b") {
+		t.Errorf("initial frame should show b preselected:\n%s", init)
+	}
+}
+
+func TestMultiSelectHint(t *testing.T) {
+	m := NewMultiSelect().Title("Pick").Options("a", "b").Hint("space to toggle, enter to confirm")
+	d, _, _ := driveMulti(t, m, KeyEvent(KeyEnter))
+
+	if init := d.Frames()[0]; !strings.Contains(init, "space to toggle, enter to confirm") {
+		t.Errorf("initial frame should render the hint footer:\n%s", init)
+	}
+}
+
 func TestMultiSelectSummaryFunc(t *testing.T) {
 	m := NewMultiSelect().Options("a", "b").
 		SummaryFunc(func(sel []string) string { return "chose: " + strings.Join(sel, "+") })

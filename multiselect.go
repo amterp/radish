@@ -18,15 +18,17 @@ import (
 // Min set, Enter does nothing until at least Min are selected.
 type MultiSelectModel struct {
 	title     string
+	hint      string
 	theme     *Theme
 	keymap    KeyMap
 	summarize func(selected []string) string
 
 	list
 
-	selected map[int]bool // keyed by option index
-	min      int
-	max      int // 0 = unlimited
+	selected  map[int]bool // keyed by option index
+	preselect []string     // labels to mark selected; reapplied when options change
+	min       int
+	max       int // 0 = unlimited
 
 	canceled bool
 }
@@ -45,10 +47,15 @@ func NewMultiSelect() *MultiSelectModel {
 // Title sets the line shown above the options (the question being asked).
 func (m *MultiSelectModel) Title(s string) *MultiSelectModel { m.title = s; return m }
 
+// Hint sets an interaction hint rendered as a faint footer line, e.g.
+// "space to toggle, enter to confirm" for first-time users. Empty = no line.
+func (m *MultiSelectModel) Hint(s string) *MultiSelectModel { m.hint = s; return m }
+
 // Options sets the selectable options (in display order).
 func (m *MultiSelectModel) Options(opts ...string) *MultiSelectModel {
 	m.options = opts
 	m.refilter()
+	m.applyPreselect()
 	return m
 }
 
@@ -110,16 +117,22 @@ func (m *MultiSelectModel) Max(n int) *MultiSelectModel {
 
 // Preselect marks the options with the given labels as already selected, so the
 // prompt opens with them checked (e.g. reflecting defaults). Labels that match
-// no option are ignored. Call after Options.
+// no option are ignored. Order-independent with Options: labels are remembered
+// and reapplied whenever the options change.
 func (m *MultiSelectModel) Preselect(labels ...string) *MultiSelectModel {
-	for _, label := range labels {
+	m.preselect = append(m.preselect, labels...)
+	m.applyPreselect()
+	return m
+}
+
+func (m *MultiSelectModel) applyPreselect() {
+	for _, label := range m.preselect {
 		for i, opt := range m.options {
 			if opt == label {
 				m.selected[i] = true
 			}
 		}
 	}
-	return m
 }
 
 // SummaryFunc overrides the collapsed line shown after submit: fn receives the
@@ -259,6 +272,10 @@ func (m *MultiSelectModel) View() string {
 		lines = append(lines, styled(m.theme.ScrollHint, m.fit("  (select "+strconv.Itoa(need)+" more)", 0)))
 	case m.max > 0 && len(m.selected) >= m.max:
 		lines = append(lines, styled(m.theme.ScrollHint, m.fit("  (max "+strconv.Itoa(m.max)+" selected)", 0)))
+	}
+
+	if m.hint != "" {
+		lines = append(lines, styled(m.theme.ScrollHint, m.fit("  "+m.hint, 0)))
 	}
 
 	return strings.Join(lines, "\n")
