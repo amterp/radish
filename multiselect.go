@@ -17,9 +17,10 @@ import (
 // option on is blocked once Max are selected (deselect is always allowed). With a
 // Min set, Enter does nothing until at least Min are selected.
 type MultiSelectModel struct {
-	title  string
-	theme  *Theme
-	keymap KeyMap
+	title     string
+	theme     *Theme
+	keymap    KeyMap
+	summarize func(selected []string) string
 
 	list
 
@@ -104,6 +105,29 @@ func (m *MultiSelectModel) Max(n int) *MultiSelectModel {
 	if n >= 0 {
 		m.max = n
 	}
+	return m
+}
+
+// Preselect marks the options with the given labels as already selected, so the
+// prompt opens with them checked (e.g. reflecting defaults). Labels that match
+// no option are ignored. Call after Options.
+func (m *MultiSelectModel) Preselect(labels ...string) *MultiSelectModel {
+	for _, label := range labels {
+		for i, opt := range m.options {
+			if opt == label {
+				m.selected[i] = true
+			}
+		}
+	}
+	return m
+}
+
+// SummaryFunc overrides the collapsed line shown after submit: fn receives the
+// selected labels (in option order) and its result replaces the default summary
+// entirely (an empty result collapses to nothing). Cancel still collapses to
+// nothing.
+func (m *MultiSelectModel) SummaryFunc(fn func(selected []string) string) *MultiSelectModel {
+	m.summarize = fn
 	return m
 }
 
@@ -241,10 +265,14 @@ func (m *MultiSelectModel) View() string {
 }
 
 // Summary is the collapsed line shown after submit: title plus the chosen values.
-// Returns "" on cancel. Implements Summarizer.
+// Returns "" on cancel. A SummaryFunc, when set, replaces the default rendering.
+// Implements Summarizer.
 func (m *MultiSelectModel) Summary() string {
 	if m.canceled {
 		return ""
+	}
+	if m.summarize != nil {
+		return m.summarize(m.Selected())
 	}
 	title := m.title
 	if title == "" {

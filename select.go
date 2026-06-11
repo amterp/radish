@@ -14,9 +14,10 @@ import (
 // hand it to Run. After Run, read the choice with Selected. The option set, filter,
 // cursor, and viewport live in the embedded list, shared with MultiSelect.
 type SelectModel struct {
-	title  string
-	theme  *Theme
-	keymap KeyMap
+	title     string
+	theme     *Theme
+	keymap    KeyMap
+	summarize func(selected string) string
 
 	list
 
@@ -62,6 +63,14 @@ func (m *SelectModel) Theme(t *Theme) *SelectModel {
 
 // KeyMap overrides the key bindings.
 func (m *SelectModel) KeyMap(k KeyMap) *SelectModel { m.keymap = k; return m }
+
+// SummaryFunc overrides the collapsed line shown after submit: fn receives the
+// selected option and its result replaces the default summary entirely (an
+// empty result collapses to nothing). Cancel still collapses to nothing.
+func (m *SelectModel) SummaryFunc(fn func(selected string) string) *SelectModel {
+	m.summarize = fn
+	return m
+}
 
 // Height sets how many option rows are visible at once (the viewport size).
 // Non-positive values are ignored.
@@ -182,6 +191,9 @@ func (m *SelectModel) Summary() string {
 	sel, ok := m.Selected()
 	if !ok {
 		return ""
+	}
+	if m.summarize != nil {
+		return m.summarize(sel)
 	}
 	title := m.title
 	if title == "" {

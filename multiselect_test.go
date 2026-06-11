@@ -156,3 +156,28 @@ func TestMultiSelectCancel(t *testing.T) {
 		t.Errorf("last frame should be the interactive render, not a summary:\n%s", lastFrame(d))
 	}
 }
+
+func TestMultiSelectPreselect(t *testing.T) {
+	m := NewMultiSelect().Title("Pick").Options("a", "b", "c").Preselect("b", "nope")
+	// "b" opens checked ("nope" is ignored); untoggle it via Down+Space, check "a".
+	d, _, mm := driveMulti(t, m, KeyEvent(KeyDown), space, space, KeyEvent(KeyEnter))
+
+	// After Down+Space: b unchecked. Second Space re-checks b... so walk it:
+	// initial: [ ]a [x]b [ ]c; Down -> cursor on b; Space -> b off; Space -> b on.
+	if got := mm.Selected(); !eqStrs(got, []string{"b"}) {
+		t.Fatalf("Selected() = %v, want [b]", got)
+	}
+	if init := d.Frames()[0]; !strings.Contains(init, "[x] b") || !strings.Contains(init, "[ ] a") {
+		t.Errorf("initial frame should show b preselected:\n%s", init)
+	}
+}
+
+func TestMultiSelectSummaryFunc(t *testing.T) {
+	m := NewMultiSelect().Options("a", "b").
+		SummaryFunc(func(sel []string) string { return "chose: " + strings.Join(sel, "+") })
+	d, _, _ := driveMulti(t, m, space, KeyEvent(KeyDown), space, KeyEvent(KeyEnter))
+
+	if last := lastFrame(d); last != "chose: a+b" {
+		t.Errorf("summary = %q, want custom rendering", last)
+	}
+}

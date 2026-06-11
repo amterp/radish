@@ -238,3 +238,15 @@ func TestSelectPaging(t *testing.T) {
 		t.Fatalf("Selected() = %q, want \"o5\" (clamped to o8 then one PageUp)", got)
 	}
 }
+
+func TestSelectSummaryFunc(t *testing.T) {
+	m := NewSelect().Title("Pick").Options("a", "b").
+		SummaryFunc(func(sel string) string { return "--flag " + sel })
+	d := NewScriptDriver([]Event{KeyEvent(KeyDown), KeyEvent(KeyEnter)})
+	if _, _, err := d.Run(m); err != nil {
+		t.Fatalf("Run error: %v", err)
+	}
+	if last := lastFrame(d); last != "--flag b" {
+		t.Errorf("summary = %q, want custom rendering", last)
+	}
+}

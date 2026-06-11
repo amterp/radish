@@ -265,3 +265,36 @@ func TestKeepTail(t *testing.T) {
 		}
 	}
 }
+
+func TestInputSummaryFunc(t *testing.T) {
+	m := NewInput().Prompt("> ").SummaryFunc(func(v string) string {
+		if v == "" {
+			return "(skipped)"
+		}
+		return "got " + v
+	})
+	d, _, _ := driveInput(t, m, RuneEvent('x'), KeyEvent(KeyEnter))
+	if last := lastFrame(d); last != "got x" {
+		t.Errorf("summary = %q, want custom rendering", last)
+	}
+
+	m2 := NewInput().Prompt("> ").SummaryFunc(func(v string) string {
+		if v == "" {
+			return "(skipped)"
+		}
+		return "got " + v
+	})
+	d2, _, _ := driveInput(t, m2, KeyEvent(KeyEnter))
+	if last := lastFrame(d2); last != "(skipped)" {
+		t.Errorf("empty-value summary = %q, want skip marker", last)
+	}
+}
+
+func TestInputSummaryFuncEmptyResultCollapsesToNothing(t *testing.T) {
+	m := NewInput().Prompt("> ").SummaryFunc(func(string) string { return "" })
+	d, _, _ := driveInput(t, m, RuneEvent('x'), KeyEvent(KeyEnter))
+	// Finish("") records no frame, so the last frame is the pre-submit render.
+	if last := lastFrame(d); last != "> x"+cursorGlyph {
+		t.Errorf("last frame = %q, want no summary frame", last)
+	}
+}

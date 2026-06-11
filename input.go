@@ -38,10 +38,11 @@ type InputModel struct {
 	keymap      KeyMap
 	width       int // 0 = no truncation
 
-	value    []rune
-	cursor   int // index into value
-	validate func(string) error
-	errMsg   string
+	value     []rune
+	cursor    int // index into value
+	validate  func(string) error
+	errMsg    string
+	summarize func(value string) string
 
 	canceled bool
 }
@@ -84,6 +85,16 @@ func (m *InputModel) KeyMap(k KeyMap) *InputModel { m.keymap = k; return m }
 // non-nil error blocks the submit, rendering the error message under the field
 // until the value is next edited. A nil fn (the default) accepts everything.
 func (m *InputModel) Validate(fn func(string) error) *InputModel { m.validate = fn; return m }
+
+// SummaryFunc overrides the collapsed line shown after submit: fn receives the
+// submitted value and its result replaces the default summary entirely (an
+// empty result collapses to nothing). Cancel still collapses to nothing. Note
+// fn receives the real value even in masked/secret echo modes - it is the
+// caller's job not to leak it.
+func (m *InputModel) SummaryFunc(fn func(value string) string) *InputModel {
+	m.summarize = fn
+	return m
+}
 
 // Width caps the rendered field to this terminal width (with an ellipsis). Zero
 // disables truncation.
@@ -209,9 +220,15 @@ func (m *InputModel) displayHalves() (left, right string) {
 
 // Summary is the collapsed line shown after submit. It returns "" on cancel, and -
 // crucially - never echoes a secret: EchoNone collapses to nothing and EchoMasked
-// to dots. Implements Summarizer.
+// to dots. A SummaryFunc, when set, replaces all of this. Implements Summarizer.
 func (m *InputModel) Summary() string {
-	if m.canceled || m.echo == EchoNone {
+	if m.canceled {
+		return ""
+	}
+	if m.summarize != nil {
+		return m.summarize(string(m.value))
+	}
+	if m.echo == EchoNone {
 		return ""
 	}
 	prefix := m.prompt
