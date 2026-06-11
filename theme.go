@@ -19,10 +19,11 @@ type Theme struct {
 	Filter      *color.Color // the typed filter line
 	Placeholder *color.Color // an input's ghost/hint text shown while empty
 	ScrollHint  *color.Color // "↑/↓ N more" and "(no matches)"
+	Error       *color.Color // an input's validation error line
 }
 
 // DefaultTheme is a tasteful default: bold title, green cursor/selection, faint
-// filter, placeholder, and scroll hints.
+// filter, placeholder, and scroll hints, red validation errors.
 func DefaultTheme() *Theme {
 	return &Theme{
 		Title:       color.New(color.Bold),
@@ -32,6 +33,7 @@ func DefaultTheme() *Theme {
 		Filter:      color.New(color.Faint),
 		Placeholder: color.New(color.Faint),
 		ScrollHint:  color.New(color.Faint),
+		Error:       color.New(color.FgRed),
 	}
 }
 

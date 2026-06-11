@@ -38,8 +38,10 @@ type InputModel struct {
 	keymap      KeyMap
 	width       int // 0 = no truncation
 
-	value  []rune
-	cursor int // index into value
+	value    []rune
+	cursor   int // index into value
+	validate func(string) error
+	errMsg   string
 
 	canceled bool
 }
@@ -78,6 +80,11 @@ func (m *InputModel) Theme(t *Theme) *InputModel {
 // KeyMap overrides the key bindings.
 func (m *InputModel) KeyMap(k KeyMap) *InputModel { m.keymap = k; return m }
 
+// Validate sets a submit gate: on Enter the current value is passed to fn, and a
+// non-nil error blocks the submit, rendering the error message under the field
+// until the value is next edited. A nil fn (the default) accepts everything.
+func (m *InputModel) Validate(fn func(string) error) *InputModel { m.validate = fn; return m }
+
 // Width caps the rendered field to this terminal width (with an ellipsis). Zero
 // disables truncation.
 func (m *InputModel) Width(n int) *InputModel {
@@ -104,10 +111,18 @@ func (m *InputModel) Update(e Event) (Model, Cmd) {
 		m.canceled = true
 		return m, CmdCancel
 	case m.keymap.matches(e, m.keymap.Submit):
+		if m.validate != nil {
+			if err := m.validate(string(m.value)); err != nil {
+				m.errMsg = err.Error()
+				return m, CmdNone
+			}
+		}
 		return m, CmdSubmit
 	case e.Type == KeyRune:
+		m.errMsg = ""
 		m.insert(e.Rune)
 	case e.Type == KeyBackspace:
+		m.errMsg = ""
 		m.backspace()
 	case m.echo == EchoNone:
 		// In no-echo (secret) mode the cursor never moves: ignore the rest.
@@ -144,13 +159,17 @@ func (m *InputModel) backspace() {
 	m.cursor--
 }
 
-// View renders the title (if any) and the field line. No trailing newline.
+// View renders the title (if any), the field line, and a pending validation
+// error (if any) below it. No trailing newline.
 func (m *InputModel) View() string {
 	var lines []string
 	if m.title != "" {
 		lines = append(lines, styled(m.theme.Title, fitWidth(m.title, m.width, 0)))
 	}
 	lines = append(lines, m.fieldLine())
+	if m.errMsg != "" {
+		lines = append(lines, styled(m.theme.Error, fitWidth(m.errMsg, m.width, 0)))
+	}
 	return strings.Join(lines, "\n")
 }
 

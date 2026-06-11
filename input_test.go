@@ -1,6 +1,7 @@
 package radish
 
 import (
+	"errors"
 	"strings"
 	"testing"
 )
@@ -139,6 +140,56 @@ func TestInputEchoMaskedShowsDots(t *testing.T) {
 	}
 	if strings.Contains(preSubmit, "abc") {
 		t.Errorf("masked frame must not reveal the value:\n%q", preSubmit)
+	}
+}
+
+func TestInputValidateBlocksSubmitUntilValid(t *testing.T) {
+	m := NewInput().Prompt("> ").Validate(func(s string) error {
+		if s != "ok" {
+			return errors.New("must be ok")
+		}
+		return nil
+	})
+	d, res, im := driveInput(t, m,
+		RuneEvent('n'), RuneEvent('o'), KeyEvent(KeyEnter), // blocked
+		KeyEvent(KeyBackspace), KeyEvent(KeyBackspace),
+		RuneEvent('o'), RuneEvent('k'), KeyEvent(KeyEnter)) // accepted
+
+	if res.Canceled {
+		t.Fatalf("result = %+v, want submitted", res)
+	}
+	if got, _ := im.Value(); got != "ok" {
+		t.Fatalf("Value() = %q, want \"ok\"", got)
+	}
+	// Frame after the blocked Enter shows the error line under the field.
+	blocked := d.Frames()[3] // initial, n, o, blocked-enter, ...
+	if blocked != "> no"+cursorGlyph+"\nmust be ok" {
+		t.Errorf("blocked frame = %q, want field + error line", blocked)
+	}
+	// First edit after the failure clears the error.
+	afterEdit := d.Frames()[4]
+	if strings.Contains(afterEdit, "must be ok") {
+		t.Errorf("error should clear on edit, got %q", afterEdit)
+	}
+}
+
+func TestInputValidateCanRequireNonEmpty(t *testing.T) {
+	m := NewInput().Prompt("> ").Validate(func(s string) error {
+		if s == "" {
+			return errors.New("value required")
+		}
+		return nil
+	})
+	d, res, im := driveInput(t, m, KeyEvent(KeyEnter), RuneEvent('x'), KeyEvent(KeyEnter))
+
+	if res.Canceled {
+		t.Fatalf("result = %+v, want submitted", res)
+	}
+	if got, _ := im.Value(); got != "x" {
+		t.Fatalf("Value() = %q, want \"x\"", got)
+	}
+	if blocked := d.Frames()[1]; !strings.Contains(blocked, "value required") {
+		t.Errorf("empty submit should render the error, got %q", blocked)
 	}
 }
 
