@@ -1,0 +1,16 @@
+{
+  "_v": 3,
+  "id": "a_25Uc3dTy5",
+  "alias": "multiselect-selected",
+  "alias_explicit": false,
+  "title": "multiselect: Selected() reports ticked rows after a cancel",
+  "description": "`MultiSelectModel.Selected()` returns whatever rows were ticked before a\ncancel, because it never consults the `canceled` field its own type already\ntracks (`multiselect.go:33`, set at `:162`, and read by `Summary()` at `:288`).\nIts two siblings do consult it:\n\n```go\nSelectModel.Selected() (string, bool)   // m.canceled -\u003e \"\", false\nInputModel.Value()     (string, bool)   // m.canceled -\u003e \"\", false\nMultiSelectModel.Selected() []string    // no check\n```\n\n`RunMultiSelect` compensates (`driver_term.go:74`), so a caller going through\nthe terminal helper is fine. The gap is for anyone driving a Model directly -\nwhich the scripted driver makes a first-class way to use radish, not just an\ninternal test seam. Surfaced while writing the go-snap snapshot suites: a\ncanceled case recorded the ticked rows as its result until the suite started\nreading `Result.Canceled` instead.\n\nThe reason this is not a one-line fix: `Selected()` has no second return value\nto say \"nothing was confirmed\", and returning nil is ambiguous with a\nlegitimate empty submit, which is legal whenever `Min` is 0. So the choice is\nbetween matching the siblings with `([]string, bool)` - breaking, and worth\ndeciding while radish has one consumer rather than several - or leaving\n`Selected()` alone and making `Result.Canceled` the documented gate, in which\ncase the inconsistency with `Select` and `Input` is the thing to justify.",
+  "creator": "Alexander Terp",
+  "created_at_millis": 1786360034812,
+  "updated_at_millis": 1786360034812,
+  "column": "backlog-hi",
+  "position": "U",
+  "history": [
+    {"field":"column","value":"backlog-hi","at":1786360034812}
+  ]
+}

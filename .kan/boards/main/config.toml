@@ -1,0 +1,52 @@
+kan_schema = "board/12"
+id = "b_25UazNoog"
+name = "main"
+default_column = "backlog-lo"
+
+[[columns]]
+  name = "backlog-lo"
+  color = "#6b7280"
+  limit = 0
+
+[[columns]]
+  name = "backlog-hi"
+  color = "#3b82f6"
+  limit = 0
+
+[[columns]]
+  name = "next"
+  color = "#f59e0b"
+  limit = 0
+
+[[columns]]
+  name = "in-progress"
+  color = "#10b981"
+  limit = 0
+
+[[columns]]
+  name = "done"
+  color = "#9333ea"
+  limit = 0
+
+[custom_fields]
+  [custom_fields.type]
+    type = "enum"
+
+    [[custom_fields.type.options]]
+      value = "bug"
+      color = "#dc2626"
+
+    [[custom_fields.type.options]]
+      value = "enhancement"
+      color = "#2563eb"
+
+    [[custom_fields.type.options]]
+      value = "feature"
+      color = "#16a34a"
+
+    [[custom_fields.type.options]]
+      value = "chore"
+      color = "#4b5563"
+
+[card_display]
+  type_indicator = "type"
