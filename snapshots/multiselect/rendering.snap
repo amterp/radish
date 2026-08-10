@@ -1,0 +1,67 @@
+### TITLE ###
+PreselectOpensChecked
+### DESCRIPTION ###
+Preselected labels are checked in the first frame, and a label that matches no
+option is ignored rather than erroring. Toggling the preselected row off and on
+again returns it to its opening state.
+### PROMPT ###
+Pick
+### OPTIONS ###
+a
+b
+c
+### PRESELECT ###
+b
+nope
+### KEYS ###
+down
+space
+space
+enter
+### SELECTED ###
+b
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] a
+  [x] b
+  [ ] c
+--- frame 1 (down) ---
+Pick
+  [ ] a
+> [x] b
+  [ ] c
+--- frame 2 (space) ---
+Pick
+  [ ] a
+> [ ] b
+  [ ] c
+--- frame 3 (space) ---
+Pick
+  [ ] a
+> [x] b
+  [ ] c
+--- frame 4 (enter) ---
+Pick b
+
+### TITLE ###
+HintFooter
+### DESCRIPTION ###
+The hint renders under the list, where a user looking for the controls will be.
+### PROMPT ###
+Pick
+### OPTIONS ###
+a
+b
+### HINT ###
+space to toggle, enter to confirm
+### KEYS ###
+enter
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] a
+  [ ] b
+  space to toggle, enter to confirm
+--- frame 1 (enter) ---
+\"Pick "

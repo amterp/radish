@@ -1,0 +1,116 @@
+### TITLE ###
+EchoNoneRendersNothingAndRepeatsItself
+### DESCRIPTION ###
+The whole point of this mode: read FRAMES and confirm the value appears in none
+of them, while VALUE shows it still reached the caller. Every frame is identical
+because rendering anything that varied - even a length - would leak the secret
+to someone watching the screen.
+### PROMPT ###
+Password >
+### ECHO ###
+none
+### KEYS ###
+"hunter2"
+enter
+### VALUE ###
+hunter2
+### FRAMES ###
+--- frame 0 (initial) ---
+Password >█
+--- frame 1 (h) ---
+Password >█
+--- frame 2 (u) ---
+Password >█
+--- frame 3 (n) ---
+Password >█
+--- frame 4 (t) ---
+Password >█
+--- frame 5 (e) ---
+Password >█
+--- frame 6 (r) ---
+Password >█
+--- frame 7 (2) ---
+Password >█
+
+### TITLE ###
+EchoNoneFreezesTheCursorButKeepsBackspace
+### DESCRIPTION ###
+Left and Home are no-ops in secret mode - there is no visible cursor to move, so
+honouring them would edit a position the user cannot see. Backspace still drops
+the last rune, which is the one edit that needs no visible position.
+### PROMPT ###
+>
+### ECHO ###
+none
+### KEYS ###
+"ab"
+left
+home
+backspace
+enter
+### VALUE ###
+a
+### FRAMES ###
+--- frame 0 (initial) ---
+>█
+--- frame 1 (a) ---
+>█
+--- frame 2 (b) ---
+>█
+--- frame 3 (left) ---
+>█
+--- frame 4 (home) ---
+>█
+--- frame 5 (backspace) ---
+>█
+
+### TITLE ###
+EchoMaskedShowsOneDotPerRune
+### DESCRIPTION ###
+Masked mode reveals the length and nothing else.
+### PROMPT ###
+>
+### ECHO ###
+masked
+### KEYS ###
+"abc"
+enter
+### VALUE ###
+abc
+### FRAMES ###
+--- frame 0 (initial) ---
+>█
+--- frame 1 (a) ---
+>•█
+--- frame 2 (b) ---
+>••█
+--- frame 3 (c) ---
+>•••█
+--- frame 4 (enter) ---
+>•••
+
+### TITLE ###
+MaskedSummaryDoesNotLeak
+### DESCRIPTION ###
+The collapsed summary is the frame that outlives the prompt in a scrollback
+buffer, so it must not print what the field spent the whole session hiding.
+### PROMPT ###
+pw >
+### ECHO ###
+masked
+### KEYS ###
+"sec"
+enter
+### VALUE ###
+sec
+### FRAMES ###
+--- frame 0 (initial) ---
+pw >█
+--- frame 1 (s) ---
+pw >•█
+--- frame 2 (e) ---
+pw >••█
+--- frame 3 (c) ---
+pw >•••█
+--- frame 4 (enter) ---
+pw >•••

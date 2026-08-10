@@ -9,6 +9,8 @@ CLAUDE.md
 *.test
 coverage.out
 coverage.html
+# go-snap reserves this extension for pending snapshots.
+*.snap.new
 
 # Editor / OS cruft
 .DS_Store

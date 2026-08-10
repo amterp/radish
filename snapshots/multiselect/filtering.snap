@@ -1,0 +1,90 @@
+### TITLE ###
+FilterPreservesSelectionByOriginalIndex
+### DESCRIPTION ###
+Selections are keyed to the option list, not to the filtered view, so choosing
+apple, narrowing to avocado, choosing that, and clearing the filter keeps both.
+Keying by visible position instead would silently move a checkmark onto whatever
+row happened to take that slot.
+### PROMPT ###
+Pick
+### OPTIONS ###
+apple
+banana
+avocado
+cherry
+### KEYS ###
+space
+"av"
+space
+ctrl-u
+enter
+### SELECTED ###
+apple
+avocado
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] apple
+  [ ] banana
+  [ ] avocado
+  [ ] cherry
+--- frame 1 (space) ---
+Pick
+> [x] apple
+  [ ] banana
+  [ ] avocado
+  [ ] cherry
+--- frame 2 (a) ---
+Pick
+/a
+> [x] apple
+  [ ] avocado
+  [ ] banana
+--- frame 3 (v) ---
+Pick
+/av
+> [ ] avocado
+--- frame 4 (space) ---
+Pick
+/av
+> [x] avocado
+--- frame 5 (ctrl-u) ---
+Pick
+> [x] apple
+  [ ] banana
+  [x] avocado
+  [ ] cherry
+--- frame 6 (enter) ---
+Pick apple, avocado
+
+### TITLE ###
+SubmitWhileFilteredToEmpty
+### DESCRIPTION ###
+The filter narrows what is shown, not what is held. Submitting from a view with
+no matches still returns the selection made before the filter was typed.
+### PROMPT ###
+Pick
+### OPTIONS ###
+apple
+banana
+### KEYS ###
+space
+"z"
+enter
+### SELECTED ###
+apple
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] apple
+  [ ] banana
+--- frame 1 (space) ---
+Pick
+> [x] apple
+  [ ] banana
+--- frame 2 (z) ---
+Pick
+/z
+  (no matches - backspace to widen)
+--- frame 3 (enter) ---
+Pick apple

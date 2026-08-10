@@ -1,0 +1,218 @@
+### TITLE ###
+SpaceAndTabBothToggle
+### DESCRIPTION ###
+Two keys toggle the cursor row, so a user who reaches for either gets the same
+result.
+### PROMPT ###
+Pick
+### OPTIONS ###
+a
+b
+c
+### KEYS ###
+space
+down
+tab
+enter
+### SELECTED ###
+a
+b
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] a
+  [ ] b
+  [ ] c
+--- frame 1 (space) ---
+Pick
+> [x] a
+  [ ] b
+  [ ] c
+--- frame 2 (down) ---
+Pick
+  [x] a
+> [ ] b
+  [ ] c
+--- frame 3 (tab) ---
+Pick
+  [x] a
+> [x] b
+  [ ] c
+--- frame 4 (enter) ---
+Pick a, b
+
+### TITLE ###
+TogglingAcrossTheList
+### DESCRIPTION ###
+Navigating between toggles leaves the untouched rows alone.
+### PROMPT ###
+Pick
+### OPTIONS ###
+o1
+o2
+o3
+o4
+o5
+### KEYS ###
+down
+space
+down
+down
+space
+enter
+### SELECTED ###
+o2
+o4
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] o1
+  [ ] o2
+  [ ] o3
+  [ ] o4
+  [ ] o5
+--- frame 1 (down) ---
+Pick
+  [ ] o1
+> [ ] o2
+  [ ] o3
+  [ ] o4
+  [ ] o5
+--- frame 2 (space) ---
+Pick
+  [ ] o1
+> [x] o2
+  [ ] o3
+  [ ] o4
+  [ ] o5
+--- frame 3 (down) ---
+Pick
+  [ ] o1
+  [x] o2
+> [ ] o3
+  [ ] o4
+  [ ] o5
+--- frame 4 (down) ---
+Pick
+  [ ] o1
+  [x] o2
+  [ ] o3
+> [ ] o4
+  [ ] o5
+--- frame 5 (space) ---
+Pick
+  [ ] o1
+  [x] o2
+  [ ] o3
+> [x] o4
+  [ ] o5
+--- frame 6 (enter) ---
+Pick o2, o4
+
+### TITLE ###
+SelectedComesBackInOptionOrder
+### DESCRIPTION ###
+Toggling c before a still reports [a, c]: the result is ordered by the option
+list, not by when each was chosen.
+### PROMPT ###
+Pick
+### OPTIONS ###
+a
+b
+c
+### KEYS ###
+down
+down
+space
+home
+space
+enter
+### SELECTED ###
+a
+c
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] a
+  [ ] b
+  [ ] c
+--- frame 1 (down) ---
+Pick
+  [ ] a
+> [ ] b
+  [ ] c
+--- frame 2 (down) ---
+Pick
+  [ ] a
+  [ ] b
+> [ ] c
+--- frame 3 (space) ---
+Pick
+  [ ] a
+  [ ] b
+> [x] c
+--- frame 4 (home) ---
+Pick
+> [ ] a
+  [ ] b
+  [x] c
+--- frame 5 (space) ---
+Pick
+> [x] a
+  [ ] b
+  [x] c
+--- frame 6 (enter) ---
+Pick a, c
+
+### TITLE ###
+CheckboxRendering
+### DESCRIPTION ###
+The cursor marker and the checkbox are separate: a row can be under the cursor
+without being selected, which is what makes the two-column prefix worth
+rendering at all.
+### PROMPT ###
+Pick
+### OPTIONS ###
+a
+b
+### KEYS ###
+space
+enter
+### SELECTED ###
+a
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] a
+  [ ] b
+--- frame 1 (space) ---
+Pick
+> [x] a
+  [ ] b
+--- frame 2 (enter) ---
+Pick a
+
+### TITLE ###
+CancelLeavesNoSummary
+### DESCRIPTION ###
+Ctrl-C discards the selection, and the last frame is the interactive render
+rather than a summary claiming something was chosen.
+### PROMPT ###
+Pick
+### OPTIONS ###
+a
+b
+### KEYS ###
+space
+ctrl-c
+### SELECTED ###
+<canceled>
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] a
+  [ ] b
+--- frame 1 (space) ---
+Pick
+> [x] a
+  [ ] b

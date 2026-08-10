@@ -1,0 +1,147 @@
+### TITLE ###
+MaxBlocksAnExtraToggle
+### DESCRIPTION ###
+At the maximum, a further toggle does nothing rather than silently swapping out
+an earlier choice.
+### PROMPT ###
+Pick
+### OPTIONS ###
+a
+b
+c
+### MAX ###
+2
+### KEYS ###
+space
+down
+space
+down
+space
+enter
+### SELECTED ###
+a
+b
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] a
+  [ ] b
+  [ ] c
+--- frame 1 (space) ---
+Pick
+> [x] a
+  [ ] b
+  [ ] c
+--- frame 2 (down) ---
+Pick
+  [x] a
+> [ ] b
+  [ ] c
+--- frame 3 (space) ---
+Pick
+  [x] a
+> [x] b
+  [ ] c
+  (max 2 selected)
+--- frame 4 (down) ---
+Pick
+  [x] a
+  [x] b
+> [ ] c
+  (max 2 selected)
+--- frame 5 (space) ---
+Pick
+  [x] a
+  [x] b
+> [ ] c
+  (max 2 selected)
+--- frame 6 (enter) ---
+Pick a, b
+
+### TITLE ###
+MaxReachedHint
+### DESCRIPTION ###
+Reaching the maximum says so, so a user whose next toggle does nothing can tell
+why.
+### PROMPT ###
+Pick
+### OPTIONS ###
+a
+b
+c
+### MAX ###
+1
+### KEYS ###
+space
+enter
+### SELECTED ###
+a
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] a
+  [ ] b
+  [ ] c
+--- frame 1 (space) ---
+Pick
+> [x] a
+  [ ] b
+  [ ] c
+  (max 1 selected)
+--- frame 2 (enter) ---
+Pick a
+
+### TITLE ###
+MinBlocksSubmitAndCountsDown
+### DESCRIPTION ###
+Enter below the minimum is a no-op, and the frame names how many more are
+needed. The second Enter, once the count is met, submits both.
+### PROMPT ###
+Pick
+### OPTIONS ###
+a
+b
+c
+### MIN ###
+2
+### KEYS ###
+space
+enter
+down
+space
+enter
+### SELECTED ###
+a
+b
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> [ ] a
+  [ ] b
+  [ ] c
+  (select 2 more)
+--- frame 1 (space) ---
+Pick
+> [x] a
+  [ ] b
+  [ ] c
+  (select 1 more)
+--- frame 2 (enter) ---
+Pick
+> [x] a
+  [ ] b
+  [ ] c
+  (select 1 more)
+--- frame 3 (down) ---
+Pick
+  [x] a
+> [ ] b
+  [ ] c
+  (select 1 more)
+--- frame 4 (space) ---
+Pick
+  [x] a
+> [x] b
+  [ ] c
+--- frame 5 (enter) ---
+Pick a, b

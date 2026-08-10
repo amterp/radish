@@ -58,6 +58,33 @@ There is intentionally **no `Confirm` widget**: a yes/no prompt is an `Input` wh
 caller interprets (e.g. empty or a `y`-prefix means yes). Keeping that policy with the caller
 keeps radish minimal and avoids a near-duplicate of `Input`.
 
+## Snapshot tests
+
+Prompt behavior that is visible in a rendered frame is tested with
+[go-snap](https://github.com/amterp/go-snap): a case in `snapshots/<model>/*.snap`
+describes the prompt as data, scripts keystrokes in `### KEYS ###`, and stores every
+frame it rendered in `### FRAMES ###`, each labeled with the key that produced it.
+Prefer adding a case there over a new Go test whenever both would do - a labeled frame
+sequence shows a reviewer what the user saw, where `strings.Contains` on `Frames()[3]`
+only asserts that one detail was somewhere on screen.
+
+Regenerate expected frames with `go test . -update=<path-substr>`, or `-update-all` for a
+sweep, and read the diff: these files are the review surface, not a cache.
+
+Two constraints shape where a test can live:
+
+- The suites are in `package radish_test`. `go-snap/prompt` imports radish, so an
+  in-package test importing it would be an import cycle. `TestMain` lives in
+  `main_test.go` because the internal and external test packages share one binary and
+  may declare it only once between them.
+- `### TITLE ###` belongs to go-snap, which uses it for the case name, so the prompt
+  heading is `### PROMPT ###`.
+
+Keep a test in Go when a snapshot cannot express it: anything configured by an injected
+closure (`Matcher`, `Validate`, `SummaryFunc`) since a text file cannot carry a function,
+anything needing unexported access (`driver_term.go`'s ANSI output, `clampField`,
+`keepTail`), and assertions about a count rather than content.
+
 ## Conventions & workflow
 
 - `go test ./...`, `go vet ./...`, and `gofmt -l .` must all be clean before committing.

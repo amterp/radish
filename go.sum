@@ -1,5 +1,9 @@
 github.com/amterp/color v1.20.1 h1:YDjwZ0X6IfK0OuZl8P2KLkV0WuH2pvttrEwr+ZbRbYU=
 github.com/amterp/color v1.20.1/go.mod h1:XRJ2OonPd9eRKRg6ddVJc6Yv/rvjzMhn+qdIDHKjE04=
+github.com/amterp/go-delta v0.1.5 h1:7KcmHhn92aBAj6xtcZvClWdAR/UmChVUnAwaL6M80cc=
+github.com/amterp/go-delta v0.1.5/go.mod h1:kvMjMJP/v/KI2qromcrkdoOM+kfNnV2TkUWmiRgASds=
+github.com/amterp/go-snap v0.1.2 h1:m8MnlXTEwTg5B8fg5ybiAV5Df7DagAP3CwyNlccZp60=
+github.com/amterp/go-snap v0.1.2/go.mod h1:v6AgLz1xESvILq15xTzOk47FiTULAnjUkFrTgMi3l5A=
 github.com/clipperhouse/uax29/v2 v2.2.0 h1:ChwIKnQN3kcZteTXMgb1wztSgaU+ZemkgWdohwgs8tY=
 github.com/clipperhouse/uax29/v2 v2.2.0/go.mod h1:EFJ2TJMRUaplDxHKj1qAEhCtQPW2tJSwu5BF98AuoVM=
 github.com/mattn/go-colorable v0.1.14 h1:9A9LHSqF/7dyVVX6g0U9cwm9pG3kP9gSzcuIPHPsaIE=

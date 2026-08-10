@@ -1,18 +1,9 @@
 package radish
 
 import (
-	"os"
 	"strings"
 	"testing"
-
-	"github.com/amterp/color"
 )
-
-// Frames are asserted as plain text, so disable color for the whole package.
-func TestMain(m *testing.M) {
-	color.NoColor = true
-	os.Exit(m.Run())
-}
 
 func drive(t *testing.T, m *SelectModel, events ...Event) (*ScriptDriver, Result, *SelectModel) {
 	t.Helper()
@@ -28,128 +19,6 @@ func drive(t *testing.T, m *SelectModel, events ...Event) (*ScriptDriver, Result
 func lastFrame(d *ScriptDriver) string {
 	f := d.Frames()
 	return f[len(f)-1]
-}
-
-func TestSelectBasicNavigation(t *testing.T) {
-	m := NewSelect().Title("Pick a fruit").Options("Apple", "Banana", "Cherry")
-	d, res, sm := drive(t, m, KeyEvent(KeyDown), KeyEvent(KeyEnter))
-
-	if res.Canceled {
-		t.Fatalf("result = %+v, want submitted (not canceled)", res)
-	}
-	if got, ok := sm.Selected(); !ok || got != "Banana" {
-		t.Fatalf("Selected() = %q, %v; want \"Banana\", true", got, ok)
-	}
-
-	frames := d.Frames()
-	if len(frames) != 3 { // initial, after-down, summary
-		t.Fatalf("len(frames) = %d, want 3: %q", len(frames), frames)
-	}
-	if !strings.Contains(frames[0], "> Apple") {
-		t.Errorf("initial frame should mark Apple:\n%s", frames[0])
-	}
-	if !strings.Contains(frames[1], "> Banana") {
-		t.Errorf("after-down frame should mark Banana:\n%s", frames[1])
-	}
-	if frames[2] != "Pick a fruit Banana" {
-		t.Errorf("summary frame = %q, want %q", frames[2], "Pick a fruit Banana")
-	}
-}
-
-func TestSelectLiveFilter(t *testing.T) {
-	m := NewSelect().Title("Pick").Options("apple", "banana", "avocado")
-	// Type "av": only "avocado" is a subsequence match.
-	d, res, sm := drive(t, m, RuneEvent('a'), RuneEvent('v'), KeyEvent(KeyEnter))
-
-	if res.Canceled {
-		t.Fatalf("result = %+v, want submitted", res)
-	}
-	if got, _ := sm.Selected(); got != "avocado" {
-		t.Fatalf("Selected() = %q, want \"avocado\"", got)
-	}
-	// The frame just before submit should show the filter line and the lone match.
-	preSubmit := d.Frames()[len(d.Frames())-2]
-	if !strings.Contains(preSubmit, "/av") {
-		t.Errorf("filtered frame should show the filter line:\n%s", preSubmit)
-	}
-	if strings.Contains(preSubmit, "apple") || strings.Contains(preSubmit, "banana") {
-		t.Errorf("filtered frame should hide non-matches:\n%s", preSubmit)
-	}
-}
-
-func TestSelectFilterNoMatches(t *testing.T) {
-	m := NewSelect().Title("Pick").Options("apple", "banana")
-	d, res, sm := drive(t, m, RuneEvent('z'), KeyEvent(KeyEnter))
-
-	// Enter with no matches is a no-op; EOF then cancels.
-	if !res.Canceled {
-		t.Fatalf("result = %+v, want Canceled (submit blocked on empty match set)", res)
-	}
-	if _, ok := sm.Selected(); ok {
-		t.Errorf("Selected() should be false when nothing matched")
-	}
-	if !strings.Contains(lastFrame(d), "no matches") {
-		t.Errorf("frame should show the no-matches hint:\n%s", lastFrame(d))
-	}
-}
-
-func TestSelectScrollingViewport(t *testing.T) {
-	m := NewSelect().Title("Pick").
-		Options("o1", "o2", "o3", "o4", "o5", "o6").
-		Height(3)
-	d, res, sm := drive(t, m,
-		KeyEvent(KeyDown), KeyEvent(KeyDown), KeyEvent(KeyDown), KeyEvent(KeyEnter))
-
-	if got, _ := sm.Selected(); got != "o4" {
-		t.Fatalf("Selected() = %q, want \"o4\"", got)
-	}
-	if res.Canceled {
-		t.Fatalf("result = %+v, want submitted", res)
-	}
-
-	// Initial frame: top of list, only a down-hint.
-	if init := d.Frames()[0]; !strings.Contains(init, "↓ 3 more") || strings.Contains(init, "↑") {
-		t.Errorf("initial frame scroll hints wrong:\n%s", init)
-	}
-	// Frame after the third down: viewport scrolled, both hints present, cursor on o4.
-	afterScroll := d.Frames()[3]
-	for _, want := range []string{"↑ 1 more", "> o4", "↓ 2 more"} {
-		if !strings.Contains(afterScroll, want) {
-			t.Errorf("scrolled frame missing %q:\n%s", want, afterScroll)
-		}
-	}
-	if strings.Contains(afterScroll, "o1") {
-		t.Errorf("scrolled frame should have dropped o1 from the viewport:\n%s", afterScroll)
-	}
-}
-
-func TestSelectCancelLeavesNoSummary(t *testing.T) {
-	m := NewSelect().Title("Pick").Options("Apple", "Banana")
-	d, res, sm := drive(t, m, KeyEvent(KeyDown), KeyEvent(KeyCtrlC))
-
-	if !res.Canceled {
-		t.Fatalf("result = %+v, want canceled", res)
-	}
-	if _, ok := sm.Selected(); ok {
-		t.Errorf("Selected() should be false after cancel")
-	}
-	// No collapsed summary on cancel: last frame is the last interactive render.
-	if !strings.Contains(lastFrame(d), "> Banana") {
-		t.Errorf("last frame should be the interactive render, not a summary:\n%s", lastFrame(d))
-	}
-}
-
-func TestSelectEmptyPromptNoLeadingBlankLine(t *testing.T) {
-	m := NewSelect().Options("Apple", "Banana") // no prompt
-	d, _, _ := drive(t, m, KeyEvent(KeyEnter))
-
-	init := d.Frames()[0]
-	if strings.HasPrefix(init, "\n") {
-		t.Errorf("empty prompt must not produce a leading blank line:\n%q", init)
-	}
-	if !strings.HasPrefix(init, "> Apple") {
-		t.Errorf("empty-prompt frame should start at the first option:\n%q", init)
-	}
 }
 
 func TestSelectInjectedMatcherControlsOrder(t *testing.T) {
@@ -187,55 +56,6 @@ func TestSelectViewLineCountIsDataDriven(t *testing.T) {
 	got := strings.Count(m.View(), "\n") + 1
 	if got != 4 {
 		t.Errorf("line count = %d, want 4 (title + 3 options):\n%s", got, m.View())
-	}
-}
-
-func TestSelectHomeEnd(t *testing.T) {
-	m := NewSelect().Title("Pick").Options("a", "b", "c", "d")
-	// Move down twice, jump End (to d), then Home (back to a), submit.
-	_, _, sm := drive(t, m,
-		KeyEvent(KeyDown), KeyEvent(KeyDown), KeyEvent(KeyEnd), KeyEvent(KeyHome), KeyEvent(KeyEnter))
-	if got, _ := sm.Selected(); got != "a" {
-		t.Fatalf("Selected() = %q, want \"a\" after End then Home", got)
-	}
-}
-
-func TestSelectClearFilter(t *testing.T) {
-	m := NewSelect().Title("Pick").Options("apple", "banana", "avocado")
-	// Filter to "av" (avocado only), then Ctrl-U clears it so all options return.
-	d, _, sm := drive(t, m,
-		RuneEvent('a'), RuneEvent('v'), KeyEvent(KeyCtrlU), KeyEvent(KeyEnter))
-	if got, _ := sm.Selected(); got != "apple" {
-		t.Fatalf("Selected() = %q, want \"apple\" (cursor at top after clearing filter)", got)
-	}
-	afterClear := d.Frames()[3] // initial, a, av, ctrl-u, summary
-	if strings.Contains(afterClear, "/") {
-		t.Errorf("filter line should be gone after Ctrl-U:\n%s", afterClear)
-	}
-	for _, opt := range []string{"apple", "banana", "avocado"} {
-		if !strings.Contains(afterClear, opt) {
-			t.Errorf("all options should return after clear, missing %q:\n%s", opt, afterClear)
-		}
-	}
-}
-
-func TestSelectPaging(t *testing.T) {
-	opts := []string{"o1", "o2", "o3", "o4", "o5", "o6", "o7", "o8"}
-
-	// One PageDown moves a full page (height 3): cursor 0 -> 3.
-	m := NewSelect().Title("Pick").Options(opts...).Height(3)
-	_, _, sm := drive(t, m, KeyEvent(KeyPageDown), KeyEvent(KeyEnter))
-	if got, _ := sm.Selected(); got != "o4" {
-		t.Fatalf("Selected() = %q, want \"o4\" after one PageDown (height 3)", got)
-	}
-
-	// PageDown clamps at the last option; PageUp steps back a page (o8 -> o5).
-	m2 := NewSelect().Title("Pick").Options(opts...).Height(3)
-	_, _, sm2 := drive(t, m2,
-		KeyEvent(KeyPageDown), KeyEvent(KeyPageDown), KeyEvent(KeyPageDown),
-		KeyEvent(KeyPageUp), KeyEvent(KeyEnter))
-	if got, _ := sm2.Selected(); got != "o5" {
-		t.Fatalf("Selected() = %q, want \"o5\" (clamped to o8 then one PageUp)", got)
 	}
 }
 

@@ -1,0 +1,62 @@
+### TITLE ###
+PlaceholderShowsWhileEmptyAndVanishesOnTyping
+### DESCRIPTION ###
+The placeholder is a prompt for what to type, not a value, so it must not
+survive the first keystroke.
+### PROMPT ###
+>
+### PLACEHOLDER ###
+name here
+### KEYS ###
+"x"
+enter
+### VALUE ###
+x
+### FRAMES ###
+--- frame 0 (initial) ---
+>█name here
+--- frame 1 (x) ---
+>x█
+--- frame 2 (enter) ---
+>x
+
+### TITLE ###
+NarrowWidthClampsTheDisplayNotTheValue
+### DESCRIPTION ###
+A field narrower than its contents truncates what it draws, and VALUE shows the
+full string still comes back. Clamping the value instead would silently discard
+what the user typed.
+### PROMPT ###
+>
+### WIDTH ###
+6
+### KEYS ###
+"abcdefghij"
+enter
+### VALUE ###
+abcdefghij
+### FRAMES ###
+--- frame 0 (initial) ---
+>█
+--- frame 1 (a) ---
+>a█
+--- frame 2 (b) ---
+>ab█
+--- frame 3 (c) ---
+>abc█
+--- frame 4 (d) ---
+>abcd█
+--- frame 5 (e) ---
+>…cde█
+--- frame 6 (f) ---
+>…def█
+--- frame 7 (g) ---
+>…efg█
+--- frame 8 (h) ---
+>…fgh█
+--- frame 9 (i) ---
+>…ghi█
+--- frame 10 (j) ---
+>…hij█
+--- frame 11 (enter) ---
+>abcdefghij

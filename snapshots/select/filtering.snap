@@ -1,0 +1,105 @@
+### TITLE ###
+TypingFiltersToSubsequenceMatches
+### DESCRIPTION ###
+Typing "av" narrows to avocado: the filter line appears and the non-matches
+leave the list.
+### PROMPT ###
+Pick
+### OPTIONS ###
+apple
+banana
+avocado
+### KEYS ###
+"av"
+enter
+### SELECTED ###
+avocado
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> apple
+  banana
+  avocado
+--- frame 1 (a) ---
+Pick
+/a
+> apple
+  avocado
+  banana
+--- frame 2 (v) ---
+Pick
+/av
+> avocado
+--- frame 3 (enter) ---
+Pick avocado
+
+### TITLE ###
+NoMatchesBlocksSubmit
+### DESCRIPTION ###
+Enter with an empty match set does nothing, so the script runs out of events and
+the prompt ends canceled. The frame shows the no-matches hint rather than an
+empty list a reader would have to interpret.
+### PROMPT ###
+Pick
+### OPTIONS ###
+apple
+banana
+### KEYS ###
+"z"
+enter
+### SELECTED ###
+<canceled>
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> apple
+  banana
+--- frame 1 (z) ---
+Pick
+/z
+  (no matches - backspace to widen)
+--- frame 2 (enter) ---
+Pick
+/z
+  (no matches - backspace to widen)
+
+### TITLE ###
+CtrlUClearsTheFilter
+### DESCRIPTION ###
+Clearing the filter restores every option and puts the cursor back at the top,
+so Enter selects the first option rather than the last match.
+### PROMPT ###
+Pick
+### OPTIONS ###
+apple
+banana
+avocado
+### KEYS ###
+"av"
+ctrl-u
+enter
+### SELECTED ###
+apple
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> apple
+  banana
+  avocado
+--- frame 1 (a) ---
+Pick
+/a
+> apple
+  avocado
+  banana
+--- frame 2 (v) ---
+Pick
+/av
+> avocado
+--- frame 3 (ctrl-u) ---
+Pick
+> apple
+  banana
+  avocado
+--- frame 4 (enter) ---
+Pick apple

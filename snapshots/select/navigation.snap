@@ -1,0 +1,210 @@
+### TITLE ###
+MovingDownThenSubmitting
+### DESCRIPTION ###
+The cursor marks one option at a time, and submitting collapses the prompt to a
+one-line summary of what was chosen.
+### PROMPT ###
+Pick a fruit
+### OPTIONS ###
+Apple
+Banana
+Cherry
+### KEYS ###
+down
+enter
+### SELECTED ###
+Banana
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick a fruit
+> Apple
+  Banana
+  Cherry
+--- frame 1 (down) ---
+Pick a fruit
+  Apple
+> Banana
+  Cherry
+--- frame 2 (enter) ---
+Pick a fruit Banana
+
+### TITLE ###
+EndThenHomeReturnsToTheTop
+### DESCRIPTION ###
+End jumps to the last option and Home back to the first, so the two cancel out.
+### PROMPT ###
+Pick
+### OPTIONS ###
+a
+b
+c
+d
+### KEYS ###
+down
+down
+end
+home
+enter
+### SELECTED ###
+a
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> a
+  b
+  c
+  d
+--- frame 1 (down) ---
+Pick
+  a
+> b
+  c
+  d
+--- frame 2 (down) ---
+Pick
+  a
+  b
+> c
+  d
+--- frame 3 (end) ---
+Pick
+  a
+  b
+  c
+> d
+--- frame 4 (home) ---
+Pick
+> a
+  b
+  c
+  d
+--- frame 5 (enter) ---
+Pick a
+
+### TITLE ###
+PageDownMovesAWholePage
+### DESCRIPTION ###
+With height 3, one PageDown moves the cursor three options rather than one.
+### PROMPT ###
+Pick
+### OPTIONS ###
+o1
+o2
+o3
+o4
+o5
+o6
+o7
+o8
+### HEIGHT ###
+3
+### KEYS ###
+page-down
+enter
+### SELECTED ###
+o4
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> o1
+  o2
+  o3
+  ↓ 5 more
+--- frame 1 (page-down) ---
+Pick
+  ↑ 1 more
+  o2
+  o3
+> o4
+  ↓ 4 more
+--- frame 2 (enter) ---
+Pick o4
+
+### TITLE ###
+PageDownClampsAtTheLastOption
+### DESCRIPTION ###
+Paging past the end stops at the last option instead of wrapping, so three
+PageDowns land on o8 and one PageUp steps back to o5.
+### PROMPT ###
+Pick
+### OPTIONS ###
+o1
+o2
+o3
+o4
+o5
+o6
+o7
+o8
+### HEIGHT ###
+3
+### KEYS ###
+page-down
+page-down
+page-down
+page-up
+enter
+### SELECTED ###
+o5
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> o1
+  o2
+  o3
+  ↓ 5 more
+--- frame 1 (page-down) ---
+Pick
+  ↑ 1 more
+  o2
+  o3
+> o4
+  ↓ 4 more
+--- frame 2 (page-down) ---
+Pick
+  ↑ 4 more
+  o5
+  o6
+> o7
+  ↓ 1 more
+--- frame 3 (page-down) ---
+Pick
+  ↑ 5 more
+  o6
+  o7
+> o8
+--- frame 4 (page-up) ---
+Pick
+  ↑ 4 more
+> o5
+  o6
+  o7
+  ↓ 1 more
+--- frame 5 (enter) ---
+Pick o5
+
+### TITLE ###
+CancelLeavesNoSummary
+### DESCRIPTION ###
+Ctrl-C returns no selection, and the last frame is the interactive render: there
+is no collapsed summary line to mislead a reader into thinking something was
+chosen.
+### PROMPT ###
+Pick
+### OPTIONS ###
+Apple
+Banana
+### KEYS ###
+down
+ctrl-c
+### SELECTED ###
+<canceled>
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> Apple
+  Banana
+--- frame 1 (down) ---
+Pick
+  Apple
+> Banana

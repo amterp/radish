@@ -1,0 +1,72 @@
+### TITLE ###
+ViewportScrollsAndShowsBothHints
+### DESCRIPTION ###
+With six options and room for three, the initial frame offers only a down-hint,
+and scrolling past the window drops the earlier options and gains an up-hint.
+The counts in the hints are what tell a reader how far the list extends in each
+direction.
+### PROMPT ###
+Pick
+### OPTIONS ###
+o1
+o2
+o3
+o4
+o5
+o6
+### HEIGHT ###
+3
+### KEYS ###
+down
+down
+down
+enter
+### SELECTED ###
+o4
+### FRAMES ###
+--- frame 0 (initial) ---
+Pick
+> o1
+  o2
+  o3
+  ↓ 3 more
+--- frame 1 (down) ---
+Pick
+  o1
+> o2
+  o3
+  ↓ 3 more
+--- frame 2 (down) ---
+Pick
+  o1
+  o2
+> o3
+  ↓ 3 more
+--- frame 3 (down) ---
+Pick
+  ↑ 1 more
+  o2
+  o3
+> o4
+  ↓ 2 more
+--- frame 4 (enter) ---
+Pick o4
+
+### TITLE ###
+EmptyPromptHasNoLeadingBlankLine
+### DESCRIPTION ###
+A picker with no title starts at the first option rather than reserving a line
+for a heading that is not there.
+### OPTIONS ###
+Apple
+Banana
+### KEYS ###
+enter
+### SELECTED ###
+Apple
+### FRAMES ###
+--- frame 0 (initial) ---
+> Apple
+  Banana
+--- frame 1 (enter) ---
+Selected Apple

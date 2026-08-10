@@ -1,0 +1,133 @@
+### TITLE ###
+TypingAndSubmitting
+### DESCRIPTION ###
+The cursor glyph sits where the next rune will land, and submitting collapses
+the field to the prompt plus the value.
+### PROMPT ###
+>
+### KEYS ###
+"hello"
+enter
+### VALUE ###
+hello
+### FRAMES ###
+--- frame 0 (initial) ---
+>█
+--- frame 1 (h) ---
+>h█
+--- frame 2 (e) ---
+>he█
+--- frame 3 (l) ---
+>hel█
+--- frame 4 (l) ---
+>hell█
+--- frame 5 (o) ---
+>hello█
+--- frame 6 (enter) ---
+>hello
+
+### TITLE ###
+CursorMovesAndInsertsMidText
+### DESCRIPTION ###
+Left moves the cursor without deleting, so the next rune is inserted where the
+glyph sits rather than appended.
+### PROMPT ###
+>
+### KEYS ###
+"ac"
+left
+"b"
+enter
+### VALUE ###
+abc
+### FRAMES ###
+--- frame 0 (initial) ---
+>█
+--- frame 1 (a) ---
+>a█
+--- frame 2 (c) ---
+>ac█
+--- frame 3 (left) ---
+>a█c
+--- frame 4 (b) ---
+>ab█c
+--- frame 5 (enter) ---
+>abc
+
+### TITLE ###
+Backspace
+### DESCRIPTION ###
+Backspace removes the rune before the cursor.
+### PROMPT ###
+>
+### KEYS ###
+"abc"
+backspace
+enter
+### VALUE ###
+ab
+### FRAMES ###
+--- frame 0 (initial) ---
+>█
+--- frame 1 (a) ---
+>a█
+--- frame 2 (b) ---
+>ab█
+--- frame 3 (c) ---
+>abc█
+--- frame 4 (backspace) ---
+>ab█
+--- frame 5 (enter) ---
+>ab
+
+### TITLE ###
+HomeAndEndJumpToTheEnds
+### DESCRIPTION ###
+Home puts the cursor before the first rune and End after the last, so typing
+after each lands at opposite ends of the value.
+### PROMPT ###
+>
+### KEYS ###
+"bc"
+home
+"a"
+end
+"d"
+enter
+### VALUE ###
+abcd
+### FRAMES ###
+--- frame 0 (initial) ---
+>█
+--- frame 1 (b) ---
+>b█
+--- frame 2 (c) ---
+>bc█
+--- frame 3 (home) ---
+>█bc
+--- frame 4 (a) ---
+>a█bc
+--- frame 5 (end) ---
+>abc█
+--- frame 6 (d) ---
+>abcd█
+--- frame 7 (enter) ---
+>abcd
+
+### TITLE ###
+CancelLeavesNoSummary
+### DESCRIPTION ###
+Ctrl-C returns no value, and the last frame is the interactive render rather
+than a summary of a value that was never submitted.
+### PROMPT ###
+>
+### KEYS ###
+"x"
+ctrl-c
+### VALUE ###
+<canceled>
+### FRAMES ###
+--- frame 0 (initial) ---
+>█
+--- frame 1 (x) ---
+>x█
