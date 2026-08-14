@@ -1,0 +1,192 @@
+### TITLE ###
+EnterOpensALineWhileTheBufferIsIncomplete
+### DESCRIPTION ###
+The caller's IsComplete hook decides. Here a trailing colon holds the buffer
+open, the continuation prompt marks the new line, and the indent hook puts the
+cursor one level in.
+### PROMPT ###
+>
+### CONT_PROMPT ###
+.
+### POLICY ###
+block
+### KEYS ###
+"if x:"
+enter
+"pass"
+enter
+enter
+### VALUE ###
+if x:
+    pass
+\"    "
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (i) ---
+>i‸
+--- frame 2 (f) ---
+>if‸
+--- frame 3 (space) ---
+>if ‸
+--- frame 4 (x) ---
+>if x‸
+--- frame 5 (:) ---
+>if x:‸
+--- frame 6 (enter) ---
+>if x:
+.    ‸
+--- frame 7 (p) ---
+>if x:
+.    p‸
+--- frame 8 (a) ---
+>if x:
+.    pa‸
+--- frame 9 (s) ---
+>if x:
+.    pas‸
+--- frame 10 (s) ---
+>if x:
+.    pass‸
+--- frame 11 (enter) ---
+>if x:
+.    pass
+.    ‸
+--- frame 12 (enter) ---
+>if x:
+.    pass
+\".    "
+
+### TITLE ###
+BlankLineClosesABlockTheHookWouldKeepOpen
+### DESCRIPTION ###
+IsComplete never returns true here, so without the blank-line rule the buffer
+could not be closed by any keystroke. An indentation-scoped language has no
+block terminator, which is why the editor owns this rule rather than the caller.
+### PROMPT ###
+>
+### CONT_PROMPT ###
+.
+### POLICY ###
+never
+### KEYS ###
+"forever"
+enter
+enter
+### VALUE ###
+forever
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (f) ---
+>f‸
+--- frame 2 (o) ---
+>fo‸
+--- frame 3 (r) ---
+>for‸
+--- frame 4 (e) ---
+>fore‸
+--- frame 5 (v) ---
+>forev‸
+--- frame 6 (e) ---
+>foreve‸
+--- frame 7 (r) ---
+>forever‸
+--- frame 8 (enter) ---
+>forever
+.‸
+--- frame 9 (enter) ---
+>forever
+.
+
+### TITLE ###
+NestedBlocksKeepIndentingUntilTheBlankLine
+### DESCRIPTION ###
+Each colon adds a level and the indent carries to the next line, so a nested
+body lands where the writer expects rather than back at column zero.
+### PROMPT ###
+>
+### CONT_PROMPT ###
+.
+### POLICY ###
+block
+### KEYS ###
+"if a:"
+enter
+"if b:"
+enter
+"deep"
+enter
+enter
+### VALUE ###
+if a:
+    if b:
+        deep
+\"        "
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (i) ---
+>i‸
+--- frame 2 (f) ---
+>if‸
+--- frame 3 (space) ---
+>if ‸
+--- frame 4 (a) ---
+>if a‸
+--- frame 5 (:) ---
+>if a:‸
+--- frame 6 (enter) ---
+>if a:
+.    ‸
+--- frame 7 (i) ---
+>if a:
+.    i‸
+--- frame 8 (f) ---
+>if a:
+.    if‸
+--- frame 9 (space) ---
+>if a:
+.    if ‸
+--- frame 10 (b) ---
+>if a:
+.    if b‸
+--- frame 11 (:) ---
+>if a:
+.    if b:‸
+--- frame 12 (enter) ---
+>if a:
+.    if b:
+.        ‸
+--- frame 13 (d) ---
+>if a:
+.    if b:
+.        d‸
+--- frame 14 (e) ---
+>if a:
+.    if b:
+.        de‸
+--- frame 15 (e) ---
+>if a:
+.    if b:
+.        dee‸
+--- frame 16 (p) ---
+>if a:
+.    if b:
+.        deep‸
+--- frame 17 (enter) ---
+>if a:
+.    if b:
+.        deep
+.        ‸
+--- frame 18 (enter) ---
+>if a:
+.    if b:
+.        deep
+\".        "

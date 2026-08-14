@@ -1,0 +1,120 @@
+### TITLE ###
+PastedNewlinesAreContentNotSubmits
+### DESCRIPTION ###
+Between the terminal's paste markers, Enter inserts a line rather than
+submitting. Without this, pasting any multi-line snippet runs its first line
+and scatters the rest. Note this case sets no policy: Enter would otherwise
+submit immediately.
+### PROMPT ###
+>
+### CONT_PROMPT ###
+.
+### KEYS ###
+paste-start
+"a"
+enter
+"b"
+paste-end
+enter
+### VALUE ###
+a
+b
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (paste-start) ---
+>‸
+--- frame 2 (a) ---
+>a‸
+--- frame 3 (enter) ---
+>a
+.‸
+--- frame 4 (b) ---
+>a
+.b‸
+--- frame 5 (paste-end) ---
+>a
+.b‸
+--- frame 6 (enter) ---
+>a
+.b
+
+### TITLE ###
+CtrlCDiscardsTheBufferWithoutEndingInput
+### DESCRIPTION ###
+Ctrl-C throws away what you were typing; the caller sees a discarded outcome
+and prompts again. Result{Canceled} alone could not say this apart from EOF,
+which is why the editor reports a typed outcome.
+### PROMPT ###
+>
+### KEYS ###
+"half typed"
+ctrl-c
+### VALUE ###
+<canceled>
+### OUTCOME ###
+discarded
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (h) ---
+>h‸
+--- frame 2 (a) ---
+>ha‸
+--- frame 3 (l) ---
+>hal‸
+--- frame 4 (f) ---
+>half‸
+--- frame 5 (space) ---
+>half ‸
+--- frame 6 (t) ---
+>half t‸
+--- frame 7 (y) ---
+>half ty‸
+--- frame 8 (p) ---
+>half typ‸
+--- frame 9 (e) ---
+>half type‸
+--- frame 10 (d) ---
+>half typed‸
+--- frame 11 (ctrl-c) ---
+>half typed
+
+### TITLE ###
+CtrlDEndsInputOnlyWhenTheBufferIsEmpty
+### DESCRIPTION ###
+On an empty buffer Ctrl-D means "no more input". With text present it deletes
+forward instead - ending a session because the cursor happened to sit at the
+end would be a nasty surprise.
+### PROMPT ###
+>
+### KEYS ###
+"abc"
+ctrl-a
+ctrl-d
+ctrl-d
+ctrl-d
+ctrl-d
+### VALUE ###
+<canceled>
+### OUTCOME ###
+eof
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (a) ---
+>a‸
+--- frame 2 (b) ---
+>ab‸
+--- frame 3 (c) ---
+>abc‸
+--- frame 4 (ctrl-a) ---
+>‸abc
+--- frame 5 (ctrl-d) ---
+>‸bc
+--- frame 6 (ctrl-d) ---
+>‸c
+--- frame 7 (ctrl-d) ---
+>‸

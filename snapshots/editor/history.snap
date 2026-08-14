@@ -1,0 +1,127 @@
+### TITLE ###
+UpRecallsPreviousEntriesAndDownReturns
+### DESCRIPTION ###
+The one history feature the editor carries. Entries are supplied by the caller,
+oldest first, so persistence stays the caller's problem.
+### PROMPT ###
+>
+### HISTORY ###
+first
+second
+### KEYS ###
+up
+up
+down
+enter
+### VALUE ###
+second
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (up) ---
+>second‸
+--- frame 2 (up) ---
+>first‸
+--- frame 3 (down) ---
+>second‸
+--- frame 4 (enter) ---
+>second
+
+### TITLE ###
+WalkingBackOutOfHistoryRestoresTheDraft
+### DESCRIPTION ###
+Half-typed input is stashed on the first Up and comes back when Down walks off
+the end of the history. Losing it would make Up a keystroke you learn to fear.
+### PROMPT ###
+>
+### HISTORY ###
+old
+### KEYS ###
+"draft"
+up
+down
+enter
+### VALUE ###
+draft
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (d) ---
+>d‸
+--- frame 2 (r) ---
+>dr‸
+--- frame 3 (a) ---
+>dra‸
+--- frame 4 (f) ---
+>draf‸
+--- frame 5 (t) ---
+>draft‸
+--- frame 6 (up) ---
+>old‸
+--- frame 7 (down) ---
+>draft‸
+--- frame 8 (enter) ---
+>draft
+
+### TITLE ###
+UpMovesWithinTheBufferBeforeReachingForHistory
+### DESCRIPTION ###
+In a multi-line buffer Up is a cursor move; only from the top line does it
+recall. This is the bash/zsh/python behavior and the reason history lives in
+the editor rather than above it.
+### PROMPT ###
+>
+### CONT_PROMPT ###
+.
+### HISTORY ###
+recalled
+### POLICY ###
+never
+### KEYS ###
+"one"
+enter
+"two"
+up
+up
+enter
+enter
+### VALUE ###
+recalled
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (o) ---
+>o‸
+--- frame 2 (n) ---
+>on‸
+--- frame 3 (e) ---
+>one‸
+--- frame 4 (enter) ---
+>one
+.‸
+--- frame 5 (t) ---
+>one
+.t‸
+--- frame 6 (w) ---
+>one
+.tw‸
+--- frame 7 (o) ---
+>one
+.two‸
+--- frame 8 (up) ---
+>one‸
+.two
+--- frame 9 (up) ---
+>recalled‸
+--- frame 10 (enter) ---
+>recalled
+.‸
+--- frame 11 (enter) ---
+>recalled
+.

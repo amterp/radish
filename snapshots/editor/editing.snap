@@ -1,0 +1,150 @@
+### TITLE ###
+CursorMovesThroughTheTextWithoutShiftingIt
+### DESCRIPTION ###
+The editor uses the terminal's own cursor, not the glyph the prompts draw, so
+the text stays put as the cursor moves. ScriptDriver marks the position with a
+caret; read FRAMES and confirm only the caret moves between them.
+### PROMPT ###
+>
+### KEYS ###
+"abc"
+left
+left
+ctrl-e
+ctrl-a
+enter
+### VALUE ###
+abc
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (a) ---
+>a‸
+--- frame 2 (b) ---
+>ab‸
+--- frame 3 (c) ---
+>abc‸
+--- frame 4 (left) ---
+>ab‸c
+--- frame 5 (left) ---
+>a‸bc
+--- frame 6 (ctrl-e) ---
+>abc‸
+--- frame 7 (ctrl-a) ---
+>‸abc
+--- frame 8 (enter) ---
+>abc
+
+### TITLE ###
+KillAndWordDeleteEditFromTheCursor
+### DESCRIPTION ###
+Ctrl-K cuts to end of line, Ctrl-W eats the word behind the cursor, and Ctrl-U
+clears the line - the readline chords radish previously dropped at the byte
+level.
+### PROMPT ###
+>
+### KEYS ###
+"hello world"
+ctrl-w
+"there"
+ctrl-a
+ctrl-k
+"done"
+enter
+### VALUE ###
+done
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (h) ---
+>h‸
+--- frame 2 (e) ---
+>he‸
+--- frame 3 (l) ---
+>hel‸
+--- frame 4 (l) ---
+>hell‸
+--- frame 5 (o) ---
+>hello‸
+--- frame 6 (space) ---
+>hello ‸
+--- frame 7 (w) ---
+>hello w‸
+--- frame 8 (o) ---
+>hello wo‸
+--- frame 9 (r) ---
+>hello wor‸
+--- frame 10 (l) ---
+>hello worl‸
+--- frame 11 (d) ---
+>hello world‸
+--- frame 12 (ctrl-w) ---
+>hello ‸
+--- frame 13 (t) ---
+>hello t‸
+--- frame 14 (h) ---
+>hello th‸
+--- frame 15 (e) ---
+>hello the‸
+--- frame 16 (r) ---
+>hello ther‸
+--- frame 17 (e) ---
+>hello there‸
+--- frame 18 (ctrl-a) ---
+>‸hello there
+--- frame 19 (ctrl-k) ---
+>‸
+--- frame 20 (d) ---
+>d‸
+--- frame 21 (o) ---
+>do‸
+--- frame 22 (n) ---
+>don‸
+--- frame 23 (e) ---
+>done‸
+--- frame 24 (enter) ---
+>done
+
+### TITLE ###
+DeleteRemovesForwardBackspaceRemovesBehind
+### DESCRIPTION ###
+Both are intrinsic edits. Delete needs its own key because a REPL cursor spends
+much of its life mid-line, where backspace alone is not enough.
+### PROMPT ###
+>
+### KEYS ###
+"abcd"
+left
+left
+delete
+backspace
+enter
+### VALUE ###
+ad
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (a) ---
+>a‸
+--- frame 2 (b) ---
+>ab‸
+--- frame 3 (c) ---
+>abc‸
+--- frame 4 (d) ---
+>abcd‸
+--- frame 5 (left) ---
+>abc‸d
+--- frame 6 (left) ---
+>ab‸cd
+--- frame 7 (delete) ---
+>ab‸d
+--- frame 8 (backspace) ---
+>a‸d
+--- frame 9 (enter) ---
+>ad

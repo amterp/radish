@@ -17,7 +17,8 @@ as the prompt family grows.
   injectable, each with a sane default so the simple case stays a one-liner. This openness is
   the reason radish exists (we left huh partly for being closed) - when adding behavior, prefer
   an injection point over a hardcoded policy.
-- **Minimal on purpose.** radish renders inline prompts and nothing more.
+- **Minimal on purpose.** radish renders inline prompts and one inline multi-line editor -
+  the input half of a REPL - and nothing more.
 
 ## Non-goals
 
@@ -26,24 +27,47 @@ no full-screen layout, no general-purpose diffing renderer, no large cross-termi
 We deliberately don't carry the machinery that inline prompts don't need - that machinery is
 exactly what we left huh to escape. A feature that requires it doesn't belong here.
 
+`EditorModel` is also **not** a readline: no completion, no syntax highlighting, no reverse
+search, no vi mode, no kill ring, no persistent history. It is a text buffer with a cursor
+that knows how to wrap and when to ask the caller whether it is finished. Anything that needs
+to understand the *language* being typed belongs in the caller, reached through an injection
+point - see `Complete`/`Indent` below.
+
 ## Extending the prompt family
 
-Today: single-select (`Select`), multi-select (`MultiSelect`), single-line text (`Input`).
-`Select` and `MultiSelect` share the filter/viewport/navigation core in the unexported `list`
-struct (`list.go`), which both embed - extend or fix list behavior there, not in two places.
-To keep new components coherent, a new component MUST:
+Today: single-select (`Select`), multi-select (`MultiSelect`), single-line text (`Input`),
+multi-line text (`Editor`). `Select` and `MultiSelect` share the filter/viewport/navigation
+core in the unexported `list` struct (`list.go`), which both embed - extend or fix list
+behavior there, not in two places. To keep new components coherent, a new component MUST:
 
 - be a pure `Model` driven by `Run`, reusing the shared contract: `Result{Canceled}` for the
   outcome, a typed `RunX(...) (value, ok, err)` convenience that spares callers a Model type
-  assertion, and `Title(...)` for the heading line;
+  assertion, and `Title(...)` for the heading line. When two bits of outcome aren't enough,
+  report a typed one from the component (`EditorModel.Outcome()`) rather than widening
+  `Result` - the value has always lived on the component, and this is the same rule. Make the
+  zero value the *unfinished* state: `Run` ends on a source EOF without the Model seeing an
+  event, so a zero value meaning "submitted" would claim a success that never happened;
 - route navigation and commands through bindable `KeyMap` actions, treating only printable
   runes and Backspace as the intrinsic, non-remappable text-input pair (the one sanctioned
   exception is MultiSelect's Space-to-toggle, a deliberate convention noted in `keymap.go`);
 - truncate every rendered line to the configured width *before* styling (color-safe), so each
-  frame line is exactly one visual row - the inline renderer's redraw accounting depends on it;
-- render only via the injected sink - a Model never writes to a terminal directly;
+  frame line is exactly one visual row - the inline renderer's redraw accounting depends on it.
+  A Model may soft-wrap to width instead of truncating, and if it does it MUST implement
+  `Cursorer` and cap its rendered height: a wrapped frame reflows as a glyph cursor moves, and
+  a frame taller than the terminal scrolls off the top, permanently desyncing `moveToStart`;
+- render only via the injected sink - a Model never writes to a terminal directly. Note this
+  is why there is no "clear the screen" key: that is I/O, so it belongs to the caller, which
+  can act on an outcome and re-run the prompt;
 - never reveal a secret in any frame: a masked/no-echo input renders placeholder glyphs (or
   nothing) and its `Summary()` must not echo the value.
+
+`Editor` is where the "prefer an injection point over a hardcoded policy" principle does its
+heaviest lifting. `Complete(func(string) bool)` decides whether Enter submits or opens a line,
+and `Indent(func(string) string)` supplies the new line's leading whitespace. Both default to
+single-line behavior. Every rule about the *language* being edited lives behind them, which is
+what keeps a code editor rad-agnostic. The one rule the editor keeps for itself is that a blank
+line always submits - without it a caller whose predicate never returns true would hold a
+buffer no keystroke could close.
 
 Conventions worth matching: `Title(...)` is always the optional heading line; `Input` adds an
 inline `Prompt(...)` prefix rendered on the field line itself (mirroring how a shell prompt
@@ -83,7 +107,14 @@ Two constraints shape where a test can live:
 Keep a test in Go when a snapshot cannot express it: anything configured by an injected
 closure (`Matcher`, `Validate`, `SummaryFunc`) since a text file cannot carry a function,
 anything needing unexported access (`driver_term.go`'s ANSI output, `clampField`,
-`keepTail`), and assertions about a count rather than content.
+`keepTail`), and assertions about a count rather than content. The editor suite works around
+the closure limit with a `POLICY` section naming one of a few stand-in `Complete` functions -
+enough to exercise wrapping and continuation, while the real predicate is tested by its owner.
+
+A `Cursorer` Model uses the terminal's own cursor, which a recorded frame cannot carry, so
+`ScriptDriver` marks the position with `‸` in the frames it records. Keep that in radish
+rather than pushing it into go-snap: the cursor is radish's protocol, and go-snap only ever
+formats strings it is handed.
 
 ## Conventions & workflow
 

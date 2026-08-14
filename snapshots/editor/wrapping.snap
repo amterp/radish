@@ -1,0 +1,202 @@
+### TITLE ###
+LongLinesWrapWithAHangingIndent
+### DESCRIPTION ###
+A prompt truncates; an editor cannot, because the text is what you are working
+on. The buffer soft-wraps itself so each frame line is still exactly one visual
+row, which is what the inline renderer's redraw accounting depends on. Note no
+row reaches the full width: a row filled to the width triggers the terminal's
+own wrap and desyncs that accounting.
+### PROMPT ###
+>
+### WIDTH ###
+12
+### KEYS ###
+"abcdefghijklmnopq"
+enter
+### VALUE ###
+abcdefghijklmnopq
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (a) ---
+>a‸
+--- frame 2 (b) ---
+>ab‸
+--- frame 3 (c) ---
+>abc‸
+--- frame 4 (d) ---
+>abcd‸
+--- frame 5 (e) ---
+>abcde‸
+--- frame 6 (f) ---
+>abcdef‸
+--- frame 7 (g) ---
+>abcdefg‸
+--- frame 8 (h) ---
+>abcdefgh‸
+--- frame 9 (i) ---
+>abcdefghi‸
+--- frame 10 (j) ---
+>abcdefghij‸
+--- frame 11 (k) ---
+>abcdefghij
+ k‸
+--- frame 12 (l) ---
+>abcdefghij
+ kl‸
+--- frame 13 (m) ---
+>abcdefghij
+ klm‸
+--- frame 14 (n) ---
+>abcdefghij
+ klmn‸
+--- frame 15 (o) ---
+>abcdefghij
+ klmno‸
+--- frame 16 (p) ---
+>abcdefghij
+ klmnop‸
+--- frame 17 (q) ---
+>abcdefghij
+ klmnopq‸
+--- frame 18 (enter) ---
+>abcdefghij
+ klmnopq
+
+### TITLE ###
+CursorTracksTheTextAcrossAWrapBoundary
+### DESCRIPTION ###
+Moving left over a wrap point puts the caret at the end of the row above, not
+at a column that no longer holds that character. Rows and cursor come out of
+one layout pass so they cannot disagree.
+### PROMPT ###
+>
+### WIDTH ###
+12
+### KEYS ###
+"abcdefghijkl"
+left
+left
+left
+enter
+### VALUE ###
+abcdefghijkl
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (a) ---
+>a‸
+--- frame 2 (b) ---
+>ab‸
+--- frame 3 (c) ---
+>abc‸
+--- frame 4 (d) ---
+>abcd‸
+--- frame 5 (e) ---
+>abcde‸
+--- frame 6 (f) ---
+>abcdef‸
+--- frame 7 (g) ---
+>abcdefg‸
+--- frame 8 (h) ---
+>abcdefgh‸
+--- frame 9 (i) ---
+>abcdefghi‸
+--- frame 10 (j) ---
+>abcdefghij‸
+--- frame 11 (k) ---
+>abcdefghij
+ k‸
+--- frame 12 (l) ---
+>abcdefghij
+ kl‸
+--- frame 13 (left) ---
+>abcdefghij
+ k‸l
+--- frame 14 (left) ---
+>abcdefghij
+ ‸kl
+--- frame 15 (left) ---
+>abcdefghi‸j
+ kl
+--- frame 16 (enter) ---
+>abcdefghij
+ kl
+
+### TITLE ###
+MaxHeightScrollsInsteadOfDrawingPastTheScreen
+### DESCRIPTION ###
+The renderer walks back up over the rows it drew, so a block taller than the
+terminal would scroll off the top and corrupt every redraw after it. The editor
+windows onto the cursor instead.
+### PROMPT ###
+>
+### CONT_PROMPT ###
+.
+### MAX_HEIGHT ###
+2
+### POLICY ###
+never
+### KEYS ###
+"one"
+enter
+"two"
+enter
+"three"
+enter
+enter
+### VALUE ###
+one
+two
+three
+### OUTCOME ###
+submitted
+### FRAMES ###
+--- frame 0 (initial) ---
+>‸
+--- frame 1 (o) ---
+>o‸
+--- frame 2 (n) ---
+>on‸
+--- frame 3 (e) ---
+>one‸
+--- frame 4 (enter) ---
+>one
+.‸
+--- frame 5 (t) ---
+>one
+.t‸
+--- frame 6 (w) ---
+>one
+.tw‸
+--- frame 7 (o) ---
+>one
+.two‸
+--- frame 8 (enter) ---
+.two
+.‸
+--- frame 9 (t) ---
+.two
+.t‸
+--- frame 10 (h) ---
+.two
+.th‸
+--- frame 11 (r) ---
+.two
+.thr‸
+--- frame 12 (e) ---
+.two
+.thre‸
+--- frame 13 (e) ---
+.two
+.three‸
+--- frame 14 (enter) ---
+.three
+.‸
+--- frame 15 (enter) ---
+.three
+.
