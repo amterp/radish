@@ -17,6 +17,7 @@ const (
 	KeyRight
 	KeyEnter
 	KeyBackspace
+	KeyDelete
 	KeyTab
 	KeyShiftTab
 	KeyEsc
@@ -24,9 +25,21 @@ const (
 	KeyEnd
 	KeyPageUp
 	KeyPageDown
+	KeyCtrlA
 	KeyCtrlC
 	KeyCtrlD
+	KeyCtrlE
+	KeyCtrlK
+	KeyCtrlL
 	KeyCtrlU
+	KeyCtrlW
+	// KeyPasteStart and KeyPasteEnd bracket a run of events the terminal
+	// delivered as a paste rather than as typing. A Model that cares (a
+	// multi-line editor, where Enter otherwise submits) inserts everything
+	// between them literally; one that doesn't can ignore both and behave
+	// exactly as before.
+	KeyPasteStart
+	KeyPasteEnd
 )
 
 // Modifier is a reserved bitfield for chord modifiers. The current parser never
@@ -66,6 +79,7 @@ var keyNames = map[KeyType]string{
 	KeyRight:     "right",
 	KeyEnter:     "enter",
 	KeyBackspace: "backspace",
+	KeyDelete:    "delete",
 	KeyTab:       "tab",
 	KeyShiftTab:  "shift-tab",
 	KeyEsc:       "esc",
@@ -73,9 +87,17 @@ var keyNames = map[KeyType]string{
 	KeyEnd:       "end",
 	KeyPageUp:    "page-up",
 	KeyPageDown:  "page-down",
+	KeyCtrlA:     "ctrl-a",
 	KeyCtrlC:     "ctrl-c",
 	KeyCtrlD:     "ctrl-d",
+	KeyCtrlE:     "ctrl-e",
+	KeyCtrlK:     "ctrl-k",
+	KeyCtrlL:     "ctrl-l",
 	KeyCtrlU:     "ctrl-u",
+	KeyCtrlW:     "ctrl-w",
+
+	KeyPasteStart: "paste-start",
+	KeyPasteEnd:   "paste-end",
 }
 
 // String returns a short, human-readable label, e.g. "up", "enter", "ctrl-c", or

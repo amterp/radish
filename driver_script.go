@@ -1,6 +1,11 @@
 package radish
 
-import "io"
+import (
+	"io"
+	"strings"
+
+	"github.com/mattn/go-runewidth"
+)
 
 // ScriptDriver replays a fixed sequence of Events through one or more Models and
 // records every frame the Models render. It fills the same role as the production
@@ -82,6 +87,48 @@ func (r *recordingSink) record(frame string) {
 func (r *recordingSink) Render(frame string) error {
 	r.record(frame)
 	return nil
+}
+
+// RenderCursor records the frame with the cursor position marked, so a snapshot
+// of a Cursorer Model still shows where the cursor was - the information a real
+// terminal carries out of band and a recorded string otherwise loses.
+func (r *recordingSink) RenderCursor(frame string, row, col int) error {
+	r.record(markCursor(frame, row, col))
+	return nil
+}
+
+// cursorMark stands in for the terminal cursor in recorded frames. It is
+// deliberately a glyph no real content is likely to contain.
+const cursorMark = "‸"
+
+// markCursor inserts cursorMark into frame at the given row and display column.
+// Out-of-range positions are clamped to the end of the row, and a row past the
+// end of the frame leaves the frame untouched rather than inventing lines.
+func markCursor(frame string, row, col int) string {
+	lines := strings.Split(frame, "\n")
+	if row < 0 || row >= len(lines) {
+		return frame
+	}
+	line := lines[row]
+
+	// col is a display column, so walk runes accumulating width rather than
+	// slicing bytes.
+	idx, w := len(line), 0
+	for i, r := range line {
+		if w >= col {
+			idx = i
+			break
+		}
+		w += runewidth.RuneWidth(r)
+	}
+	if w < col {
+		// Cursor sits past the last rune: pad so the column still lines up.
+		line += strings.Repeat(" ", col-w)
+		idx = len(line)
+	}
+
+	lines[row] = line[:idx] + cursorMark + line[idx:]
+	return strings.Join(lines, "\n")
 }
 
 func (r *recordingSink) Finish(final string) error {

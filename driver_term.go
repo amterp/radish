@@ -13,6 +13,10 @@ const (
 	escHideCursor = "\x1b[?25l"
 	escShowCursor = "\x1b[?25h"
 	escEraseBelow = "\x1b[J" // erase from cursor to end of screen
+	// Bracketed paste makes the terminal wrap pasted text in ESC[200~ / ESC[201~,
+	// which is the only way to tell a pasted newline from a pressed Enter.
+	escPasteOn  = "\x1b[?2004h"
+	escPasteOff = "\x1b[?2004l"
 )
 
 // RunTerminal drives a Model against a real terminal: in is put into raw mode and
@@ -105,6 +109,7 @@ func NewTermDriver(in *os.File, out io.Writer) (*TermDriver, error) {
 	if err != nil {
 		return nil, err
 	}
+	_, _ = io.WriteString(out, escPasteOn)
 	return &TermDriver{
 		in:       in,
 		out:      out,
@@ -146,6 +151,14 @@ func (d *TermDriver) Render(frame string) error {
 	return err
 }
 
+// RenderCursor draws the frame and leaves the terminal's own cursor at (row,
+// col) within it, visible. This is the Cursorer path; Render remains the
+// hidden-cursor path the prompts use.
+func (d *TermDriver) RenderCursor(frame string, row, col int) error {
+	_, err := io.WriteString(d.out, d.rend.renderCursor(frame, row, col))
+	return err
+}
+
 func (d *TermDriver) Finish(final string) error {
 	_, err := io.WriteString(d.out, d.rend.finish(final))
 	return err
@@ -159,6 +172,7 @@ func (d *TermDriver) Close() error {
 		d.rend.cursorHidden = false
 	}
 	if d.oldState != nil {
+		_, _ = io.WriteString(d.out, escPasteOff)
 		err := term.Restore(d.fd, d.oldState)
 		d.oldState = nil
 		return err
@@ -172,7 +186,11 @@ func (d *TermDriver) Close() error {
 // than writing them, so the escape-sequence logic is unit-testable without a
 // terminal.
 type inlineRenderer struct {
-	lastLines    int
+	lastLines int
+	// cursorRow is which row of the rendered block the cursor was left on, which
+	// is what the next redraw has to walk back up. Plain Render leaves it at the
+	// bottom; RenderCursor leaves it wherever the Model asked for.
+	cursorRow    int
 	cursorHidden bool
 }
 
@@ -182,11 +200,47 @@ func (r *inlineRenderer) render(frame string) string {
 		b.WriteString(escHideCursor)
 		r.cursorHidden = true
 	}
-	r.moveToStart(&b)
+	r.redraw(&b, frame)
+	return b.String()
+}
+
+// renderCursor redraws the frame and then walks the cursor back to (row, col),
+// leaving it visible. The cursor is hidden across the redraw either way, so it
+// never visibly darts through the text on its way to the right cell.
+func (r *inlineRenderer) renderCursor(frame string, row, col int) string {
+	var b strings.Builder
+	if !r.cursorHidden {
+		b.WriteString(escHideCursor)
+		r.cursorHidden = true
+	}
+	r.redraw(&b, frame)
+
+	// The redraw leaves the cursor at the end of the frame's last line. Return to
+	// column 0 before moving up, matching moveToStart: if a line happened to fill
+	// the terminal width the pending-wrap flag is set, and carriage-return then
+	// cursor-up is well defined where the reverse order is not.
+	b.WriteString("\r")
+	if up := r.lastLines - 1 - row; up > 0 {
+		b.WriteString("\x1b[" + strconv.Itoa(up) + "A")
+	}
+	if col > 0 {
+		b.WriteString("\x1b[" + strconv.Itoa(col) + "C")
+	}
+	b.WriteString(escShowCursor)
+	r.cursorHidden = false
+	r.cursorRow = row
+	return b.String()
+}
+
+// redraw returns to the start of the previously-rendered block, clears it, and
+// writes the new frame, updating the line count the next redraw walks back over.
+// Writing the frame leaves the cursor on its last row.
+func (r *inlineRenderer) redraw(b *strings.Builder, frame string) {
+	r.moveToStart(b)
 	b.WriteString(escEraseBelow)
 	b.WriteString(toRawLines(frame))
 	r.lastLines = strings.Count(frame, "\n") + 1
-	return b.String()
+	r.cursorRow = r.lastLines - 1
 }
 
 func (r *inlineRenderer) finish(final string) string {
@@ -202,17 +256,19 @@ func (r *inlineRenderer) finish(final string) string {
 		r.cursorHidden = false
 	}
 	r.lastLines = 0
+	r.cursorRow = 0
 	return b.String()
 }
 
 // moveToStart returns the cursor to column 0 of the first line of the previously
-// rendered block, ready to clear and redraw.
+// rendered block, ready to clear and redraw. It walks up from wherever the last
+// render left the cursor, which is not always the block's bottom row.
 func (r *inlineRenderer) moveToStart(b *strings.Builder) {
 	if r.lastLines == 0 {
 		return
 	}
 	b.WriteString("\r")
-	if up := r.lastLines - 1; up > 0 {
+	if up := r.cursorRow; up > 0 {
 		b.WriteString("\x1b[" + strconv.Itoa(up) + "A")
 	}
 }

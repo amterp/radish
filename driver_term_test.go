@@ -66,6 +66,68 @@ func TestInlineRendererFinishCancelClearsBlock(t *testing.T) {
 	}
 }
 
+func TestInlineRendererCursorPositionsWithinFrame(t *testing.T) {
+	var r inlineRenderer
+	got := r.renderCursor("abc\ndef\nghi", 1, 2)
+	// Hide, erase, write 3 lines (cursor lands after "ghi"), return to column 0,
+	// up 1 row to row 1, right 2, show.
+	want := escHideCursor + escEraseBelow + "abc\r\ndef\r\nghi" +
+		"\r" + "\x1b[1A" + "\x1b[2C" + escShowCursor
+	if got != want {
+		t.Errorf("renderCursor = %q, want %q", got, want)
+	}
+	if r.cursorRow != 1 {
+		t.Errorf("cursorRow = %d, want 1", r.cursorRow)
+	}
+}
+
+func TestInlineRendererCursorOnLastRowNeedsNoUpMove(t *testing.T) {
+	var r inlineRenderer
+	got := r.renderCursor("ab\ncd", 1, 0)
+	want := escHideCursor + escEraseBelow + "ab\r\ncd" + "\r" + escShowCursor
+	if got != want {
+		t.Errorf("renderCursor = %q, want %q", got, want)
+	}
+}
+
+// The redraw after a cursor render must walk up from where the cursor actually
+// sits, not from the bottom of the block - otherwise every frame after the
+// cursor leaves the last row drifts down the screen.
+func TestInlineRendererRedrawAfterCursorWalksFromCursorRow(t *testing.T) {
+	var r inlineRenderer
+	_ = r.renderCursor("a\nb\nc", 0, 0) // cursor left on row 0 of 3, and shown
+	got := r.render("x")
+	// No cursor-up: already on row 0. Re-hidden because the cursor path had
+	// shown it.
+	want := escHideCursor + "\r" + escEraseBelow + "x"
+	if got != want {
+		t.Errorf("redraw after cursor = %q, want %q", got, want)
+	}
+}
+
+func TestMarkCursorPlacesGlyph(t *testing.T) {
+	cases := []struct {
+		name     string
+		frame    string
+		row, col int
+		want     string
+	}{
+		{"mid-line", "abc\ndef", 1, 1, "abc\nd‸ef"},
+		{"line start", "abc", 0, 0, "‸abc"},
+		{"line end", "abc", 0, 3, "abc‸"},
+		{"past line end pads", "ab", 0, 4, "ab  ‸"},
+		{"row out of range is untouched", "ab", 5, 0, "ab"},
+		{"wide runes counted by display width", "🍔x", 0, 2, "🍔‸x"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := markCursor(c.frame, c.row, c.col); got != c.want {
+				t.Errorf("markCursor = %q, want %q", got, c.want)
+			}
+		})
+	}
+}
+
 // RunTerminal must refuse a non-terminal input cleanly, which is the contract rad
 // relies on for its no-TTY policy.
 func TestRunTerminalNonTTYReturnsErrNotInteractive(t *testing.T) {

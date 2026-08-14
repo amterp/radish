@@ -58,6 +58,39 @@ type Summarizer interface {
 	Summary() string
 }
 
+// Cursorer is an optional Model capability: where the terminal's own cursor
+// belongs inside the frame just rendered, as a zero-based row and *display*
+// column (the Model does the width accounting, so a frame containing wide runes
+// still lands the cursor correctly).
+//
+// Prompts don't implement it - they draw a cursor glyph instead, which survives
+// in color-stripped snapshot frames. That trade is right for a one-line field
+// and wrong for an editor, where a glyph shifts the text as it moves. A Model
+// that implements Cursorer gets the real thing.
+type Cursorer interface {
+	Cursor() (row, col int)
+}
+
+// CursorSink is the FrameSink half of Cursorer. A sink that implements it is
+// handed the cursor position along with the frame; one that doesn't just gets
+// Render, so existing sinks need no change.
+type CursorSink interface {
+	RenderCursor(frame string, row, col int) error
+}
+
+// renderFrame draws one frame, routing through the cursor-aware path only when
+// both the Model and the sink opt in.
+func renderFrame(model Model, sink FrameSink) error {
+	frame := model.View()
+	if c, ok := model.(Cursorer); ok {
+		if cs, ok := sink.(CursorSink); ok {
+			row, col := c.Cursor()
+			return cs.RenderCursor(frame, row, col)
+		}
+	}
+	return sink.Render(frame)
+}
+
 // ErrNotInteractive is returned by RunTerminal when the input is not a TTY.
 var ErrNotInteractive = errors.New("radish: not an interactive terminal")
 
@@ -75,7 +108,7 @@ func Run(model Model, src EventSource, sink FrameSink) (Result, Model, error) {
 	defer src.Close()
 	defer sink.Close()
 
-	if err := sink.Render(model.View()); err != nil {
+	if err := renderFrame(model, sink); err != nil {
 		return Result{}, model, err
 	}
 
@@ -98,7 +131,7 @@ func Run(model Model, src EventSource, sink FrameSink) (Result, Model, error) {
 			return collapse(model, sink, Result{Canceled: true})
 		}
 
-		if err := sink.Render(model.View()); err != nil {
+		if err := renderFrame(model, sink); err != nil {
 			return Result{}, model, err
 		}
 	}

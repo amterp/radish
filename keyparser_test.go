@@ -20,10 +20,15 @@ func TestParse(t *testing.T) {
 		{"backspace DEL", []byte{0x7f}, []Event{KeyEvent(KeyBackspace)}, 1},
 		{"backspace BS", []byte{0x08}, []Event{KeyEvent(KeyBackspace)}, 1},
 		{"tab", []byte{0x09}, []Event{KeyEvent(KeyTab)}, 1},
+		{"ctrl-a", []byte{0x01}, []Event{KeyEvent(KeyCtrlA)}, 1},
 		{"ctrl-c", []byte{0x03}, []Event{KeyEvent(KeyCtrlC)}, 1},
 		{"ctrl-d", []byte{0x04}, []Event{KeyEvent(KeyCtrlD)}, 1},
+		{"ctrl-e", []byte{0x05}, []Event{KeyEvent(KeyCtrlE)}, 1},
+		{"ctrl-k", []byte{0x0b}, []Event{KeyEvent(KeyCtrlK)}, 1},
+		{"ctrl-l", []byte{0x0c}, []Event{KeyEvent(KeyCtrlL)}, 1},
 		{"ctrl-u", []byte{0x15}, []Event{KeyEvent(KeyCtrlU)}, 1},
-		{"unknown control dropped", []byte{0x01}, nil, 1},
+		{"ctrl-w", []byte{0x17}, []Event{KeyEvent(KeyCtrlW)}, 1},
+		{"unknown control dropped", []byte{0x1c}, nil, 1},
 		{"ctrl-z dropped", []byte{0x1a}, nil, 1},
 
 		// Printable / UTF-8
@@ -50,7 +55,22 @@ func TestParse(t *testing.T) {
 		{"end tilde 8", []byte("\x1b[8~"), []Event{KeyEvent(KeyEnd)}, 4},
 		{"page up tilde 5", []byte("\x1b[5~"), []Event{KeyEvent(KeyPageUp)}, 4},
 		{"page down tilde 6", []byte("\x1b[6~"), []Event{KeyEvent(KeyPageDown)}, 4},
-		{"delete tilde 3 dropped", []byte("\x1b[3~"), nil, 4},
+		{"delete tilde 3", []byte("\x1b[3~"), []Event{KeyEvent(KeyDelete)}, 4},
+		{"unmapped tilde dropped", []byte("\x1b[9~"), nil, 4},
+
+		// Bracketed paste: the markers are what distinguish a pasted newline
+		// from a pressed Enter.
+		{"paste start", []byte("\x1b[200~"), []Event{KeyEvent(KeyPasteStart)}, 6},
+		{"paste end", []byte("\x1b[201~"), []Event{KeyEvent(KeyPasteEnd)}, 6},
+		{
+			"bracketed paste of two lines",
+			[]byte("\x1b[200~a\rb\x1b[201~"),
+			[]Event{
+				KeyEvent(KeyPasteStart), RuneEvent('a'), KeyEvent(KeyEnter),
+				RuneEvent('b'), KeyEvent(KeyPasteEnd),
+			},
+			15,
+		},
 
 		// Modified arrow (Ctrl+Up): modifier ignored, still navigates
 		{"ctrl+up modified -> up", []byte("\x1b[1;5A"), []Event{KeyEvent(KeyUp)}, 6},

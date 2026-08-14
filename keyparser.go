@@ -41,12 +41,22 @@ func parseOne(b []byte) (ev Event, n int, ok bool) {
 		return KeyEvent(KeyBackspace), 1, true
 	case c == 0x09: // Tab
 		return KeyEvent(KeyTab), 1, true
+	case c == 0x01: // Ctrl-A
+		return KeyEvent(KeyCtrlA), 1, true
 	case c == 0x03: // Ctrl-C
 		return KeyEvent(KeyCtrlC), 1, true
 	case c == 0x04: // Ctrl-D
 		return KeyEvent(KeyCtrlD), 1, true
+	case c == 0x05: // Ctrl-E
+		return KeyEvent(KeyCtrlE), 1, true
+	case c == 0x0b: // Ctrl-K
+		return KeyEvent(KeyCtrlK), 1, true
+	case c == 0x0c: // Ctrl-L
+		return KeyEvent(KeyCtrlL), 1, true
 	case c == 0x15: // Ctrl-U
 		return KeyEvent(KeyCtrlU), 1, true
+	case c == 0x17: // Ctrl-W
+		return KeyEvent(KeyCtrlW), 1, true
 	case c < 0x20: // other C0 control bytes: drop
 		return KeyEvent(KeyNone), 1, true
 	default: // printable: decode one UTF-8 rune (space included)
@@ -120,11 +130,17 @@ func parseCSI(b []byte) (Event, int, bool) {
 			return KeyEvent(KeyHome), consumed, true
 		case "4", "8":
 			return KeyEvent(KeyEnd), consumed, true
+		case "3":
+			return KeyEvent(KeyDelete), consumed, true
+		case "200":
+			return KeyEvent(KeyPasteStart), consumed, true
+		case "201":
+			return KeyEvent(KeyPasteEnd), consumed, true
 		case "5":
 			return KeyEvent(KeyPageUp), consumed, true
 		case "6":
 			return KeyEvent(KeyPageDown), consumed, true
-		default: // "3"=Delete, ... - recognized shape, unmapped
+		default: // recognized shape, unmapped
 			return KeyEvent(KeyNone), consumed, true
 		}
 	default:
